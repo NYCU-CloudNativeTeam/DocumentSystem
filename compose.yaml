@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: document-system-nginx:0.0.1
+    ports:
+      - "8080:8080"
+    hostname: document-system-nginx
+    links:
+      - api
+
+  mysql:
+    build:
+      context: .
+      dockerfile: docker/mysql/Dockerfile
+    image: document-system-db:0.0.1
+    ports:
+      - "3306:3306"
+    hostname: document-system-mysql
+    # environment:
+    #   - MYSQL_ROOT_PASSWORD=root_password
+    #   - MYSQL_DATABASE=my_database
+    #   - MYSQL_USER=my_user
+    #   - MYSQL_PASSWORD=my_password
+    # volumes:
+    #   - mysql_data:/var/lib/mysql
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+      args:
+        ENVIRONMENT: dev
+    image: document-system-api:0.0.1
+    ports: 
+      - "5000:5000"
+    hostname: document-system-api
+    links:
+      - rabbitmq
