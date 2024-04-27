@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Send Mail</title>
+</head>
+
+<body>
+	<div>
+		<h1>{{ status }}</h1>
+	</div>
+    <h1>Hello</h1>
+	<h2>Send Mail</h2>
+	<form action="/mail" method="POST">
+		<fieldset>
+			<legend>Send mail</legend>
+			<label>收件人</label><br />
+			<input type="email" name="recipient" required /><br />
+			<label>標題</label><br />
+			<input type="text" name="title" /><br />
+			<label>內容</label><br />
+			<input type="text" name="content" /><br />
+			<input type="submit" value="送出" />
+		</fieldset>
+	</form>
+</body>
+
+</html>
