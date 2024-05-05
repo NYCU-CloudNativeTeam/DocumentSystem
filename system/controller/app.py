@@ -1,13 +1,15 @@
 from flask import Flask
 from flask_admin import Admin
+from dotenv import load_dotenv
 
 from .document.routes import document
 from .auth.routes import auth
-from .notify.routes import notify
+from .notification.routes import notify
 from .config import Config
 
 
 def create_app():
+    load_dotenv()
 
     # create instance
     app = Flask(__name__)

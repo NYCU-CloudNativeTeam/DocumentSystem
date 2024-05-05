@@ -1,4 +1,4 @@
-from api.app import create_app
+from controller.app import create_app
 
 
 # this is example for unittest

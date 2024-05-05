@@ -6,3 +6,7 @@ class Config:
     # API setup
     APP_HOST = '0.0.0.0'
     APP_PORT = 5000
+
+    # Redis
+    REDIS_HOST = '0.0.0.0'
+    REDIS_PORT = 6379

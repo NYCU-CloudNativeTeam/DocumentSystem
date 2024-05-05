@@ -28,6 +28,15 @@ services:
     # volumes:
     #   - mysql_data:/var/lib/mysql
 
+  redis:
+    build:
+      context: .
+      dockerfile: docker/redis/Dockerfile
+    image: document-system-redis:0.0.1
+    port:
+      - "6379:6379"
+    hostname: document-system-redis
+
   api:
     build:
       context: .
