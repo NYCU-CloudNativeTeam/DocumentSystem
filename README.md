@@ -10,6 +10,12 @@ The backend system of document system.
     * Choose a review from our team member as reviewer to review your PR.
     * Writing some testing case before commit PR.
 * Dev
+    * Replace sensitive base on your env:
+        ```
+        $ cd system
+        $ cp .env.sample .env
+        $ vim .env # write down your env
+        ```
     * build and running:
         * You can change dev or production of API when change `ENVIRONMENT`, accept `dev` and `production`
         ```
