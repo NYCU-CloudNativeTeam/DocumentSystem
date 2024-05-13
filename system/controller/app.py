@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_admin import Admin
 from dotenv import load_dotenv
@@ -6,15 +8,34 @@ from .document.routes import document
 from .auth.routes import auth
 from .notification.routes import notify
 from .config import Config
-
+from system.model.base_model import db
+from model.document_model import (
+    Document, 
+    DocumentComment,
+    DocumentPermission,
+    DocumentPermissionType,
+    DocumentStatus
+)
+from system.model.audit_model import Audit, AuditStatus
+from system.model.user_model import User
 
 def create_app():
     load_dotenv()
 
     # create instance
     app = Flask(__name__)
+
+    # Config for SQLAlchemy
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+
     app.config.from_object(Config)
     print(app.config)
+
+    # Initialize the database with the app
+    db.init_app(app)
+    with app.app_context():
+        # Creates all tables
+        db.create_all()
 
     # register document component
     # and also add prefix /document of URL
