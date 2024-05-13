@@ -57,7 +57,8 @@ def get_audits():
     return jsonify({"documents": audits})
 
 @audit.route('/', methods=['POST'], strict_slashes=False)
-@validate_json(NewAuditSchema)
+# FIXME: valid query parameter
+# @validate_json(NewAuditSchema)
 def request_audit():
     """Request an audit for a document.
 
