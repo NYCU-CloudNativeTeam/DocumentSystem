@@ -7,8 +7,9 @@ from dotenv import load_dotenv
 from .document.routes import document
 from .auth.routes import auth
 from .notification.routes import notify
+from .audit.routes import audit
 from .config import Config
-from system.model.base_model import db
+from model.base_model import db
 from model.document_model import (
     Document, 
     DocumentComment,
@@ -16,8 +17,8 @@ from model.document_model import (
     DocumentPermissionType,
     DocumentStatus
 )
-from system.model.audit_model import Audit, AuditStatus
-from system.model.user_model import User
+from model.audit_model import Audit, AuditStatus
+from model.user_model import User
 
 def create_app():
     load_dotenv()
@@ -48,6 +49,10 @@ def create_app():
     # register auth component
     # and also add prefix /auth of URL
     app.register_blueprint(notify, url_prefix='/api/notify')
+
+    # register auth component
+    # and also add prefix /auth of URL
+    app.register_blueprint(audit, url_prefix='/api/audits')
 
     # import admin and register
     admin = Admin(app, url="/api/admin", name='microblog', template_mode='bootstrap3')

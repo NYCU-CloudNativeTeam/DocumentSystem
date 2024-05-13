@@ -13,6 +13,19 @@ class Audit(db.Model):
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    def to_dict(self) -> dict:
+        # Convert the Audit object to a dictionary.
+        return {
+            'id': self.id,
+            'uid': self.uid,
+            'document_id': self.document_id,
+            'creator_id': self.creator_id,
+            'audit_status_id': self.audit_status_id,
+            'rejected_reason': self.rejected_reason,
+            'created_date': self.created_date,
+            'updated_date': self.updated_date
+        }
+
 class AuditStatus(db.Model):
     __tablename__ = 'audit_status'
     id = db.Column(db.Integer, primary_key=True)
