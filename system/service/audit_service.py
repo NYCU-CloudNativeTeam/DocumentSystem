@@ -2,7 +2,7 @@ from flask import current_app
 from typing import List, Optional, Dict
 from uuid import uuid4
 
-from model.audit_model import Audit
+from model.audit_model import Audit, AuditStatus
 from repo.audit_repo import AuditRepository
 from repo.user_repo import UserRepository
 
@@ -49,12 +49,41 @@ class AuditService:
         """
         user = self.user_repo.find_user_by_username(auditor_username)
         if user:
+            audit_status = AuditStatus(
+                name=auditor_username,
+                audit_status_value=3 #Possible values: "approved(1)", "rejected(2)", "pending(3)"
+            )
+            new_audit_status = self.audit_repo.create_audit_status(audit_status)
+            current_app.logger.info(f"New audits status record {new_audit_status}")
             audit = Audit(
                 uid=str(uuid4()),
                 document_id=document_uid,
                 creator_id=user.id,
-                audit_status_id=1
+                audit_status_id=audit_status.id
             )
             new_audit = self.audit_repo.create_audit(audit)
+            current_app.logger.info(f"New audits record {new_audit}")
             return {"auditUid": new_audit.uid}
         return None
+
+    def get_audit_result(self, document_uid: str) -> Optional[Dict]:
+        """Retrieve audit result for a document UID."""
+        audit = self.audit_repo.get_audit_by_document_uid(document_uid)
+        if audit:
+            audit_status = self.audit_repo.get_audit_status_by_audit_status_id(audit.audit_status_id)
+            if audit_status:
+                audit_status_value = audit_status.audit_status_value
+                if audit_status_value == '1':
+                    auditor = self.user_repo.find_user_by_username(audit_status.name)
+                    audit_result = {
+                        'auditUid': audit.uid,
+                        'documentUid': audit.document_id,
+                        'auditStatus': audit_status.audit_status_value,
+                        'auditor': auditor,
+                        'auditedTime': audit_status.updated_date.isoformat() + 'Z'
+                    }
+                    #Pending: 加audit_status_value=2, 3
+
+            return audit_result
+        else:
+            return None
