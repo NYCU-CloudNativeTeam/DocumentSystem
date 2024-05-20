@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from .base_model import db
 
 class Document(db.Model):
@@ -13,6 +12,20 @@ class Document(db.Model):
     document_status_id = db.Column(db.Integer, db.ForeignKey('document_status.id'), nullable=False)
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    comments = db.relationship('DocumentComment', backref='document', lazy=True)
+
+    def to_dict(self) -> dict:
+        return {
+            'uid': self.uid,
+            'name': self.name,
+            'body': self.body,
+            'owner_id': self.owner_id,
+            'lock_session': self.lock_session,
+            'document_status_id': self.document_status_id,
+            'created_date': self.created_date,
+            'updated_date': self.updated_date,
+            'comments': [comment.to_dict() for comment in self.comments]
+        }
 
 class DocumentStatus(db.Model):
     __tablename__ = 'document_status'
@@ -31,6 +44,18 @@ class DocumentComment(db.Model):
     created_by_auditor = db.Column(db.Boolean, default=False)
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self) -> dict:
+        return {
+            'inlineId': self.inline_id,
+            'text': self.text,
+            'commenter': {
+                'name': self.commenter.name,
+            },
+            'created_by_auditor': self.created_by_auditor,
+            'created_date': self.created_date,
+            'updated_date': self.updated_date
+        }
 
 class DocumentPermission(db.Model):
     __tablename__ = 'document_permission'
