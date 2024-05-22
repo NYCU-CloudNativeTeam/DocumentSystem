@@ -1,6 +1,6 @@
 # service/user_service.py
 
-from typing import Optional
+from typing import Optional, Dict
 from repo.user_repo import UserRepository
 from model.user_model import User
 
@@ -46,3 +46,26 @@ class UserService:
             third_party_info=third_party_info
         )
         return self.user_repository.add_user(new_user)
+    
+    def get_user_settings(self, username: str) -> Optional[Dict]:
+        user = self.user_repository.find_user_by_username(username)
+        if user:
+            return {
+                'username': user.username,
+                'name': user.name,
+                'notification_flag': user.notification_flag
+            }
+        return None
+
+    def update_user_settings(self, username: str, name: str, notification_flag: bool) -> Optional[Dict]:
+        user = self.user_repository.find_user_by_username(username)
+        if user:
+            user.name = name
+            user.notification_flag = notification_flag
+            db.session.commit()
+            return {
+                'username': user.username,
+                'name': user.name,
+                'notification_flag': user.notification_flag
+            }
+        return None
