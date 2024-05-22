@@ -67,13 +67,14 @@ class AuditService:
         return None
 
     def get_audit_result(self, document_uid: str) -> Optional[Dict]:
-        """Retrieve audit result for a document UID."""
+        """Retrieve audit result by document UID."""
         audit = self.audit_repo.get_audit_by_document_uid(document_uid)
         if audit:
             audit_status = self.audit_repo.get_audit_status_by_audit_status_id(audit.audit_status_id)
             if audit_status:
                 audit_status_value = audit_status.audit_status_value
-                if audit_status_value == '1':
+                current_app.logger.info(f"audit_result is {audit_status_value}")
+                if audit_status_value == 1:
                     auditor = self.user_repo.find_user_by_username(audit_status.name)
                     audit_result = {
                         'auditUid': audit.uid,
@@ -82,8 +83,53 @@ class AuditService:
                         'auditor': auditor,
                         'auditedTime': audit_status.updated_date.isoformat() + 'Z'
                     }
-                    #Pending: 加audit_status_value=2, 3
-
-            return audit_result
+                elif audit_status_value == 2:
+                    auditor = self.user_repo.find_user_by_username(audit_status.name)
+                    audit_result = {
+                        'auditUid': audit.uid,
+                        'documentUid': audit.document_id,
+                        'auditStatus': audit_status.audit_status_value,
+                        'rejectedReason': audit.rejected_reason,
+                        'auditor': auditor,
+                        'auditedTime': audit_status.updated_date.isoformat() + 'Z'
+                    }
+                elif audit_status_value == 3:
+                    auditor = self.user_repo.find_user_by_username(audit_status.name)
+                    audit_result = {
+                        'auditUid': audit.uid,
+                        'documentUid': audit.document_id,
+                        'auditStatus': audit_status.audit_status_value,
+                        'auditor': auditor
+                    }
+                else:
+                    audit_result = None
+                    current_app.logger.info(f"Error! audit_result is not match 1, 2, 3.")
+                return audit_result
+            else:
+                current_app.logger.info(f"Error! Cannot get audit_status by audit_status_id")
+                return None
         else:
+            current_app.logger.info(f"Error! Cannot get audit by document_uid")
+            return None
+    
+    def submit_audit_result(self, document_uid: str, audit_uid: str, audit_status: int, rejected_reason: str):
+        """Send audit result by document UID."""
+        audit = self.audit_repo.get_audit_by_document_uid(document_uid)
+        if audit:
+            audit_status = self.audit_repo.get_audit_status_by_audit_status_id(audit.audit_status_id)
+            if audit_status:
+                audit_status_value = audit_status.audit_status_value
+                if audit_status_value == 3: # not auditted yet.
+                    audit_status.audit_status_value = audit_status
+                    audit.rejected_reason = rejected_reason
+                    current_app.logger.info(f"audit_status_value is set to {audit_status}.")
+                    return True
+                else
+                    current_app.logger.info(f"audit_status_value is {audit_status_value}, {document_uid} had been auditted.")
+                    return False
+            else:
+                current_app.logger.info(f"Error! Cannot get audit_status by audit_status_id")
+                return None
+        else:
+            current_app.logger.info(f"Error! Cannot get audit by document_uid")
             return None
