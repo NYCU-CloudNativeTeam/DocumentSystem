@@ -7,6 +7,9 @@ class UserRepository:
         """Retrieve a user by their username."""
         return User.query.filter_by(username=username).first()
 
+    def find_user_by_id(self, user_id: int) -> Optional<User]:
+        return User.query.get(user_id)
+
     def add_user(self, user: User) -> User:
         """Add a new user to the database.
 
