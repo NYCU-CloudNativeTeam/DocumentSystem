@@ -33,7 +33,7 @@ services:
       context: .
       dockerfile: docker/redis/Dockerfile
     image: document-system-redis:0.0.1
-    port:
+    ports:
       - "6379:6379"
     hostname: document-system-redis
 
@@ -47,5 +47,5 @@ services:
     ports: 
       - "5000:5000"
     hostname: document-system-api
-    links:
-      - rabbitmq
+    # links:
+    #   - rabbitmq
