@@ -124,7 +124,7 @@ class AuditService:
                     audit.rejected_reason = rejected_reason
                     current_app.logger.info(f"audit_status_value is set to {audit_status}.")
                     return True
-                else
+                else:
                     current_app.logger.info(f"audit_status_value is {audit_status_value}, {document_uid} had been auditted.")
                     return False
             else:
