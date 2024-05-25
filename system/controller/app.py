@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, redirect, request
 from flask_admin import Admin
 from dotenv import load_dotenv
 
@@ -12,7 +12,7 @@ from .account.routes import account
 from .config import Config
 from model.base_model import db
 from model.document_model import (
-    Document, 
+    Document,
     DocumentComment,
     DocumentPermission,
     DocumentPermissionType,
@@ -89,6 +89,15 @@ def create_app():
 
     # create instance
     app = Flask(__name__)
+
+    # Redirect AAA/ to AAA, instead the other way around (default)
+    # https://stackoverflow.com/a/40365514/19378088
+    app.url_map.strict_slashes = False
+    @app.before_request
+    def clear_trailing():
+        rp = request.path
+        if rp != '/' and rp.endswith('/'):
+            return redirect(rp[:-1])
 
     # Config for SQLAlchemy
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
