@@ -12,7 +12,7 @@ const userStore = useUserStore()
     <v-navigation-drawer expand-on-hover rail permanent>
       <template v-slot:prepend>
         <v-list>
-          <v-list-item prepend-icon="mdi-book">
+          <v-list-item prepend-icon="mdi-book" @click="this.$router.push('/')">
             <v-list-item-title class="text-h4 font-weight-bold">DocCenter</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -29,12 +29,15 @@ const userStore = useUserStore()
         </v-list-item>
       </v-list>
       <template v-slot:append>
+        <v-divider thickness="2" color="primary"></v-divider>
         <v-list>
           <v-list-item
             :prepend-avatar="userStore.user.avatar"
             :subtitle="userStore.user.email"
             :title="userStore.user.name"
           >
+          </v-list-item>
+          <v-list-item prepend-icon="mdi-logout" @click="console.log('logout')" title="LOGOUT">
           </v-list-item>
         </v-list>
       </template>
