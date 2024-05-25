@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, redirect, request
 from flask_admin import Admin
 from dotenv import load_dotenv
 
@@ -15,7 +15,7 @@ from .users.routes import users
 from .config import Config
 from model.base_model import db
 from model.document_model import (
-    Document, 
+    Document,
     DocumentComment,
     DocumentPermission,
     DocumentPermissionType,
@@ -71,7 +71,7 @@ def init_dummy(db):
     document1 = Document(uid='doc1', name='Document 1', body='Body of document 1', owner_id=user1.id, document_status_id=documet_status_1.id)
     document2 = Document(uid='doc2', name='Document 2', body='Body of document 2', owner_id=user2.id, document_status_id=documet_status_2.id)
     document3 = Document(uid='doc3', name='Document 3', body='Body of document 3', owner_id=user3.id, document_status_id=documet_status_3.id)
-    
+
     for i in [
         document1,
         document2,
@@ -117,7 +117,16 @@ def create_app():
     app = Flask(__name__)
     app.secret_key = os.getenv("SECRET_KEY")
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1" # to allow Http traffic for local dev
-    
+
+    # Redirect AAA/ to AAA, instead the other way around (default)
+    # https://stackoverflow.com/a/40365514/19378088
+    app.url_map.strict_slashes = False
+    @app.before_request
+    def clear_trailing():
+        rp = request.path
+        if rp != '/' and rp.endswith('/'):
+            return redirect(rp[:-1])
+
     # Config for SQLAlchemy
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
 
@@ -162,7 +171,7 @@ def create_app():
     # register auth component
     # and also add prefix /sign-in of URL
     app.register_blueprint(googleAuth, url_prefix='/sign-in')
-    
+
     app.register_blueprint(users, url_prefix='/users')
 
     # import admin and register
