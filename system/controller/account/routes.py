@@ -52,12 +52,30 @@ def create_user():
     except ValueError as e:
         return jsonify(error=str(e)), 409
 
-@account.route('/settings', methods=['GET'], strict_slashes=False)
-def get_account_settings():
-    username = request.args.get('username')
-    if not username:
-        return jsonify({"error": "Username is required"}), 400
+@account.route('/settings/<username>', methods=['GET'], strict_slashes=False)
+def get_account_settings(username):
+    """
+    Retrieve settings for a specified user account identified by username.
 
+    Example:
+        Access this endpoint with the following curl command:
+            ```bash
+            curl -i -X GET http://localhost:5000/api/account/settings/albert123
+            ```
+
+    Args:
+        username (str): Username of the user whose settings are to be retrieved.
+
+    Returns:
+        JSON response containing the user's settings if found, 
+        or an error message if not found.
+        The expected JSON format of a successful response is:
+            {
+                "username": "albert123",
+                "name": "Albert",
+                "emailNotifications": true
+            }
+    """
     settings = user_service.get_user_settings(username)
     if settings:
         return jsonify(settings), 200
@@ -66,6 +84,28 @@ def get_account_settings():
 
 @account.route('/settings', methods=['PUT'], strict_slashes=False)
 def update_account_settings():
+    """
+    Update user account settings based on provided JSON data.
+
+    Example:
+        Use the following curl command to call the endpoint:
+            ```bash
+            curl -i -X PUT http://localhost:5000/api/account/settings \
+            -H "Content-Type: application/json" \
+            -d '{"username": "albert123", "name": "Albert Einstein", "emailNotifications": false}'
+            ```
+
+    Args:
+        None directly, expects a JSON payload with username, name, and emailNotifications fields.
+
+    Returns:
+        JSON response with updated user details if successful or an error message if not found or data is missing. Expected successful response format:
+            {
+                "username": "albert123",
+                "name": "Albert Einstein",
+                "emailNotifications": false
+            }
+    """
     data = request.get_json()
     username = data.get('username')
     name = data.get('name')
