@@ -12,7 +12,6 @@ class Document(db.Model):
     document_status_id = db.Column(db.Integer, db.ForeignKey('document_status.id'), nullable=False)
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    comments = db.relationship('DocumentComment', backref='document', lazy=True)
 
     def to_dict(self) -> dict:
         return {
@@ -24,7 +23,6 @@ class Document(db.Model):
             'document_status_id': self.document_status_id,
             'created_date': self.created_date,
             'updated_date': self.updated_date,
-            'comments': [comment.to_dict() for comment in self.comments]
         }
 
 class DocumentStatus(db.Model):
