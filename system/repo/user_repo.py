@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 from model.user_model import User
 from model.base_model import db
 
@@ -31,3 +31,15 @@ class UserRepository:
         db.session.add(user)
         db.session.commit()
         return user
+
+    def update_user_settings(self, user: User) -> None:
+        """
+        Commit changes of the user object to the database.
+
+        Args:
+            user (User): The user instance with updated fields that needs to be committed.
+
+        Returns:
+            None
+        """
+        db.session.commit()
