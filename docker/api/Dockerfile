@@ -9,4 +9,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY ./system .
 EXPOSE 5000
 
-CMD ["python", "-m", "api.app"]
+CMD sleep 10; python -m controller.app
