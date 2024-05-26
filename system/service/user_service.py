@@ -102,3 +102,23 @@ class UserService:
                 'emailNotifications': user.notification_flag
             }
         return None
+
+    def find_user_by_name(self, name: str) -> Optional[User]:
+        """
+        Retrieve a user by their full name.
+
+        This method queries the user repository to find a user based on the full name provided. 
+        If a matching user is found, it returns a dictionary containing key user details. 
+        If no user matches the provided name, it returns None.
+
+        Args:
+            name (str): The full name of the user to retrieve.
+
+        Returns:
+            Optional[Dict]: A dictionary containing user details if a user is found; otherwise, None.
+            The dictionary includes the user's username, name, email, and notification settings.
+        """
+        user = self.user_repository.find_user_by_name(name)
+        if user:
+            return user
+        return None

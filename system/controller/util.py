@@ -21,7 +21,10 @@ def validate_json(schema):
                 json_data = request.get_json()
                 # using marshmallow to do validtion
                 validated_data = schema().load(json_data)
-                return func(validated_data, *args, **kwargs)
+                # Update kwargs with validated data for downstream processing
+                kwargs.update(validated_data)
+                return func(**kwargs)
+                # return func(validated_data, *args, **kwargs)
             except ValidationError as e:
                 return jsonify({'error': str(e)}), 422
         return wrapper

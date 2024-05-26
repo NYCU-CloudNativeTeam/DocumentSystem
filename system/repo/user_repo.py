@@ -43,3 +43,15 @@ class UserRepository:
             None
         """
         db.session.commit()
+
+    def find_user_by_name(self, name: str) -> User:
+        """
+        Find a user by their full name from the database.
+
+        Args:
+            name (str): The full name of the user to search for.
+
+        Returns:
+            User: The user object if found, otherwise None.
+        """
+        return User.query.filter_by(name=name).first()
