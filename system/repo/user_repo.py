@@ -4,7 +4,19 @@ from model.base_model import db
 
 class UserRepository:
     def find_user_by_username(self, username: str) -> Optional[User]:
-        """Retrieve a user by their username."""
+        """
+        Retrieve a user from the database by their username.
+
+        This method searches the User model's database table for an entry
+        that matches the provided username. If a matching user is found, 
+        it returns the User object. If no user is found, it returns None.
+
+        Args:
+            username (str): The username of the user to retrieve.
+
+        Returns:
+            Optional[User]: The user object if found, otherwise None.
+        """
         return User.query.filter_by(username=username).first()
 
     def add_user(self, user: User) -> User:
