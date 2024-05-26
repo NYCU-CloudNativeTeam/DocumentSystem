@@ -125,25 +125,3 @@ def request_audit():
         return jsonify(audit), 200
     else:
         return jsonify({"error": "User not found or audit creation failed"}), 400
-
-@audit_bp.route('/documents/<string:document_uid>/audit-result', methods=['GET'])
-def get_audit_result(document_uid):
-    """Retrieve audit result by document UID."""
-    audit_result = audit_service.get_audit_result(document_uid)
-    if audit_result:
-        return jsonify(audit_result), 200
-    else:
-        return jsonify({"error": "Audit record not found"}), 400
-
-@audit_bp.route('/documents/<string:document_uid>/audit-result', methods=['POST'])
-def submit_audit_result(document_uid):
-    """Send audit result by document UID."""
-    data = request.get_json()
-    audit_uid = data.get('auditUid')
-    audit_status = data.get('auditStatus')
-    rejected_reason = data.get('rejectedReason')
-    audit_result = audit_service.submit_audit_result(document_uid, audit_uid, audit_status, rejected_reason)
-    if audit_result:
-        return jsonify({"message": "Audit status updated successfully"}), 200
-    else:
-        return jsonify({"error": "Failed to update audit status"}), 400
