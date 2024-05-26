@@ -1,5 +1,9 @@
 version: '3'
 
+networks:
+  document_system_network:
+    driver: bridge
+
 services:
   nginx:
     build:
@@ -9,8 +13,8 @@ services:
     ports:
       - "8080:8080"
     hostname: document-system-nginx
-    links:
-      - api
+    networks:
+      - document_system_network
 
   mysql:
     build:
@@ -19,12 +23,9 @@ services:
     image: document-system-db:0.0.1
     ports:
       - "3306:3306"
-    hostname: document-system-mysql
-    # environment:
-    #   - MYSQL_ROOT_PASSWORD=root_password
-    #   - MYSQL_DATABASE=my_database
-    #   - MYSQL_USER=my_user
-    #   - MYSQL_PASSWORD=my_password
+    hostname: mysql
+    networks:
+      - document_system_network
     # volumes:
     #   - mysql_data:/var/lib/mysql
 
@@ -33,9 +34,11 @@ services:
       context: .
       dockerfile: docker/redis/Dockerfile
     image: document-system-redis:0.0.1
-    port:
+    ports:
       - "6379:6379"
     hostname: document-system-redis
+    networks:
+      - document_system_network
 
   api:
     build:
@@ -47,5 +50,5 @@ services:
     ports: 
       - "5000:5000"
     hostname: document-system-api
-    links:
-      - rabbitmq
+    networks:
+      - document_system_network
