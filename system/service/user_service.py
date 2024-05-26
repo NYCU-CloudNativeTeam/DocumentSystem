@@ -65,7 +65,7 @@ class UserService:
             return {
                 'username': user.username,
                 'name': user.name,
-                'notification_flag': user.notification_flag
+                'emailNotifications': user.notification_flag
             }
         return None
 
@@ -99,6 +99,6 @@ class UserService:
             return {
                 'username': user.username,
                 'name': user.name,
-                'notification_flag': user.notification_flag
+                'emailNotifications': user.notification_flag
             }
         return None
