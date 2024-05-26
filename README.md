@@ -21,6 +21,7 @@ The backend system of document system.
         ```
         $ docker compose up --build
         ```
+    * backend running on `5000` port directly, Nginx expost `8080` port and rewrite `/api/v1` before redirect to backend server
 * Testing
     * Run testing and generate report (on terminal and html)
         ```
