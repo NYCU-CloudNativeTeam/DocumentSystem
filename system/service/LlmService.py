@@ -9,9 +9,12 @@ class LlmService:
 
     def get_llm_response(question):
         try:
-            response = openai.Completion.create(
-                model="gpt-3.5-turbo-0125",
-                prompt=f"{question}\n",
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": question}
+                ],
                 temperature=0.9,
                 max_tokens=2048,
                 top_p=1,
@@ -21,4 +24,4 @@ class LlmService:
         except Exception as e:
             print(f"Error: {e}")
             return str(e)
-        return response.choices[0].text.strip()
+        return response.choices[0].message['content'].strip()
