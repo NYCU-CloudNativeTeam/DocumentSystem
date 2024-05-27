@@ -4,8 +4,7 @@ import openai
 
 class LlmService:
     def __init__(self):
-        # read GitHub Secrets 中的 API key
-        openai.api_key = openai_api_key = os.getenv('OPENAI_API_KEY')
+        openai.api_key = os.getenv('OPENAI_API_KEY')
 
     def get_llm_response(question):
         try:
