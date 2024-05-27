@@ -13,19 +13,25 @@ services:
     ports:
       - "8080:8080"
     hostname: document-system-nginx
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+      - ./frontend:/app
     networks:
       - document_system_network
+    depends_on:
+      - api
+      - frontend
 
   mysql:
-    build:
-      context: .
-      dockerfile: docker/mysql/Dockerfile
-    image: document-system-db:0.0.1
-    ports:
-      - "3306:3306"
+    image: mysql:8.3
     hostname: mysql
     networks:
       - document_system_network
+    environment:
+      MYSQL_ROOT_PASSWORD: nycu_is_good
+      MYSQL_DATABASE: document_system
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
     # volumes:
     #   - mysql_data:/var/lib/mysql
 
@@ -34,8 +40,6 @@ services:
       context: .
       dockerfile: docker/redis/Dockerfile
     image: document-system-redis:0.0.1
-    ports:
-      - "6379:6379"
     hostname: document-system-redis
     networks:
       - document_system_network
@@ -47,8 +51,24 @@ services:
       args:
         ENVIRONMENT: dev
     image: document-system-api:0.0.1
-    ports: 
-      - "5000:5000"
+    volumes:
+      - ./system:/app
     hostname: document-system-api
+    networks:
+      - document_system_network
+    environment:
+      SQLALCHEMY_DATABASE_URI: mysql://admin:admin@mysql:3306/document_system
+    depends_on:
+      - mysql
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend/Dockerfile
+    image: document-system-frontend:0.0.1
+    hostname: document-system-frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Source: https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder/62799209#62799209
     networks:
       - document_system_network
