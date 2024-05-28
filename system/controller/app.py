@@ -9,6 +9,7 @@ from .auth.routes import auth
 from .notification.routes import notify
 from .audit.routes import audit
 from .account.routes import account
+from .llm.routes import llm
 from .config import Config
 from model.base_model import db
 from model.document_model import (
@@ -126,6 +127,10 @@ def create_app():
     # register auth component
     # and also add prefix /account of URL
     app.register_blueprint(account, url_prefix='/account')
+
+    # register auth component
+    # and also add prefix /llm of URL
+    app.register_blueprint(llm, url_prefix='/llm')
 
     # import admin and register
     admin = Admin(app, url="/admin", name='microblog', template_mode='bootstrap3')
