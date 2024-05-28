@@ -112,3 +112,33 @@ class DocumentService:
                 ]
             }
         return None
+
+    def delete_document_by_uid(self, document_uid: str):
+        """Delete a document from the database identified by its unique identifier (UID).
+
+        This method attempts to find a document by its UID. If the document is found,
+        it is deleted from the database. If the document is not found, it logs this information
+        and returns False. If any exception occurs during the process, 
+        it logs the error and also returns False.
+
+        Args:
+            document_uid (str): The unique identifier of the document to be deleted.
+
+        Returns:
+            bool: True if the document is successfully deleted, False otherwise. 
+                False is returned both in the case where the document is not found 
+                and in the case where an exception occurs.
+        """
+        try:
+            document = self.document_repo.get_document_by_uid(document_uid)
+            if document:
+                current_app.logger.info(f"Delete document UID: {document_uid}")
+                self.document_repo.delete_document(document)
+                return True
+            else:
+                current_app.logger.info(f"No document found with UID: {document_uid}")
+                return False
+        except Exception as e:
+            current_app.logger.error(f"Error when attempting to delete document with UID: {document_uid}")
+            current_app.logger.error(e)
+            return False

@@ -168,3 +168,29 @@ def submit_audit_result(document_uid):
             return jsonify({"error": "Failed to update audit status"}), 400
     except KeyError as e:
         return jsonify(error=f"Missing parameter: {str(e)}"), 400
+
+@documents.route('/<document_uid>', methods=['DELETE'], strict_slashes=False)
+def delete_document(document_uid):
+    """
+    Delete a document identified by its unique identifier (UID).
+
+    This endpoint deletes the document specified by the UID. If the deletion is successful,
+    it returns a message indicating the operation was successful. If the document cannot be found
+    or the deletion fails, it returns an error message.
+
+    Args:
+        uid (str): The unique identifier of the document to be deleted.
+
+    Returns:
+        JSON response indicating whether the deletion was successful or failed.
+
+    Example:
+        Use the following curl command to delete a document by UID:
+            ```bash
+            curl -i -X DELETE http://localhost:5000/documents/12345
+            ```
+    """
+    if document_service.delete_document_by_uid(document_uid):
+        return jsonify({"message": "Document deleted successfully"}), 200
+    else:
+        return jsonify({"error": "Failed to delete document"}), 404

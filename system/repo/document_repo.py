@@ -1,6 +1,12 @@
 from typing import List
 from flask import current_app
-from model.document_model import Document, DocumentStatus, DocumentComment
+from model.document_model import (
+    Document,
+    DocumentStatus,
+    DocumentComment,
+    DocumentPermission
+)
+from model.audit_model import Audit
 from model.base_model import db
 
 class DocumentRepository:
@@ -98,3 +104,17 @@ class DocumentRepository:
         """
         return DocumentComment.query.filter_by(document_id=document_id).all()
     
+    def delete_document(self, document: Document) -> bool:
+        """Delete a document given found document of database
+
+        Args:
+            document (Document): The document instance to be deleted.
+        
+        Returns:
+            None
+        """
+        Audit.query.filter_by(document_id=document.id).delete()
+        DocumentPermission.query.filter_by(document_id=document.id).delete()
+
+        db.session.delete(document)
+        db.session.commit()
