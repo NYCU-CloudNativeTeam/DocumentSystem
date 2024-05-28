@@ -13,8 +13,13 @@ class LlmService:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are a document optimization assistant. Your role is to help users correct, optimize, and fill in missing information in their documents. Ensure the content is clear, well-structured, and free of errors. Provide detailed suggestions and improvements where necessary."},
-                    {"role": "user", "content": f"Help me correct/optimize the following content and just answer the revised sentence directly.\n\n  {question}"}
+                    {"role": "system", "content": "You are a document optimization assistant. \
+                        Your role is to help users correct, optimize, \
+                        and fill in missing information in their documents. \
+                        Ensure the content is clear, well-structured, and free of errors. \
+                        Provide detailed suggestions and improvements where necessary."},
+                    {"role": "user", "content": f"Help me correct/optimize the following content \
+                     and just answer the revised sentence directly.\n\n  {question}"}
                 ],
                 temperature=0.9,
                 max_tokens=2048,
