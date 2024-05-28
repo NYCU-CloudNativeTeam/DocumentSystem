@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from service.llm_service import LlmService
+from service.LlmService import LlmService
 
 # define llm as blueprint name
 llm = Blueprint('llm', __name__)
@@ -39,8 +39,10 @@ def get_llm_response():
                 "message": "Question cannot be empty"
             }
     """
-    if len(request.form.get('question', '')) < 1:
-        return jsonify({"message": "Question cannot be empty"}), 404
-    question = request.form['question']
+    data = request.get_json()
+    question = data.get('question','')
+    print("question",question)
+    if len(question) < 1:
+        return jsonify({"result": "Question cannot be empty"}), 404
     res = llm_service.get_llm_response(question)
     return jsonify({"result": res}), 200

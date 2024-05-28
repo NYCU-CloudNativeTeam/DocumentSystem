@@ -1,12 +1,12 @@
 from flask import current_app
-
+import os
 import openai
 
 class LlmService:
     def __init__(self):
         openai.api_key = os.getenv('OPENAI_API_KEY')
 
-    def get_llm_response(question):
+    def get_llm_response(self, question):
         try:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
