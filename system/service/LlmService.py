@@ -1,6 +1,7 @@
 from flask import current_app
 import os
 import openai
+from flask import current_app
 
 class LlmService:
     def __init__(self):
@@ -8,10 +9,11 @@ class LlmService:
 
     def get_llm_response(self, question):
         try:
+            current_app.logger.info(f"accept question: {question}")
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "system", "content": "You are a document optimization assistant. Your role is to help users optimize the content of their documents, fill in missing information, and ensure that the document is well-structured and error-free."},
                     {"role": "user", "content": question}
                 ],
                 temperature=0.9,

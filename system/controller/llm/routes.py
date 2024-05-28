@@ -1,11 +1,11 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from service.LlmService import LlmService
 
 # define llm as blueprint name
 llm = Blueprint('llm', __name__)
 llm_service = LlmService()
 
-@llm.route('/', methods=['POST'])
+@llm.route('/', methods=['POST'], strict_slashes=False)
 def get_llm_response():
     """
     Send selected text to the backend for processing with a language model and retrieve the result.
@@ -41,7 +41,6 @@ def get_llm_response():
     """
     data = request.get_json()
     question = data.get('question','')
-    print("question",question)
     if len(question) < 1:
         return jsonify({"result": "Question cannot be empty"}), 404
     res = llm_service.get_llm_response(question)
