@@ -36,7 +36,7 @@ def get_llm_response():
         
         Error response format:
             {
-                "message": "Question cannot be empty"
+                "result": "Question cannot be empty"
             }
     """
     data = request.get_json()
