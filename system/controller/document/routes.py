@@ -11,11 +11,7 @@ documents = Blueprint('documents', __name__)
 document_service = DocumentService()
 audit_service = AuditService()
 
-@document.route('/')
-def index():
-    return jsonify({"message": "example of document route"}), 200
-
-@document.route('/documents/<string:document_uid>/permissions', methods=['GET'])
+@documents.route('/documents/<string:document_uid>/permissions', methods=['GET'])
 def get_document_permissions(document_uid):
     try:
         permissions = document_service.get_document_permissions(document_uid)
@@ -24,7 +20,7 @@ def get_document_permissions(document_uid):
         current_app.logger.error(f"Error fetching document permissions: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-@document.route('/documents/<string:document_uid>/permissions', methods=['PUT'])
+@documents.route('/documents/<string:document_uid>/permissions', methods=['PUT'])
 def update_document_permission(document_uid):
     data = request.get_json()
     if 'username' not in data or 'permissionType' not in data:
@@ -40,7 +36,7 @@ def update_document_permission(document_uid):
         current_app.logger.error(f"Error updating document permission: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-@document.route('/documents/<string:document_uid>/name', methods=['PUT'])
+@documents.route('/documents/<string:document_uid>/name', methods=['PUT'])
 def update_document_name(document_uid):
     data = request.get_json()
     if 'name' not in data:
