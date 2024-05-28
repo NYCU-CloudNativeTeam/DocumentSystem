@@ -8,7 +8,8 @@ from ..util import validate_json
 from model.document_model import Document, DocumentStatus, DocumentComment, DocumentPermission, DocumentPermissionType
 
 documents = Blueprint('documents', __name__)
-
+document_service = DocumentService()
+audit_service = AuditService()
 
 @document.route('/')
 def index():
@@ -212,3 +213,4 @@ def submit_audit_result(document_uid):
             return jsonify({"error": "Failed to update audit status"}), 400
     except KeyError as e:
         return jsonify(error=f"Missing parameter: {str(e)}"), 400
+        return jsonify({"error": "Internal server error"}), 500
