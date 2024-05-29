@@ -26,5 +26,9 @@ The backend system of document system.
     * Run testing and generate report (on terminal and html)
         ```
         $ cd system
-        $ coverage run -m pytest && coverage report -m && coverage html
+        $ coverage run -m pytest -v --cov=repo --cov=service --cov=controller --cov=email_notification_system  --cov-report term --cov-report html
+        ```
+    * you can run http server to see coverage report in html:
+        ```
+        $ cd system && python -m http.server
         ```
