@@ -1,4 +1,5 @@
 import time
+import os
 import smtplib
 from abc import ABC, abstractmethod
 from email.mime.multipart import MIMEMultipart
@@ -17,24 +18,18 @@ class NotificationStrategy(ABC):
 class EmailRepo(NotificationStrategy):
     def __init__(
         self,
-        sender_email: str, 
-        sender_password: str,
-        sender_email_host: str = 'smtp.gmail.com',
-        sender_email_port: int = 587,
     ):
-        self.sender_email = sender_email
-        self.sender_password = sender_password
-        self.sender_email_host = sender_email_host
-        self.sender_email_port = sender_email_port
+        self.sender_email = os.getenv("EMAIL_SENDER")
+        self.sender_password = os.getenv("EMAIL_PASS")
+        self.sender_email_host = os.getenv("EMAIL_HOST")
+        self.sender_email_port = os.getenv("EMAIL_PORT")
 
     def send(
         self,
-        notification: Notification
+        recipient,
+        title,
+        content
     ):
-        recipient = notification.recipient
-        title = notification.title
-        content = notification.content
-    
         # Create the MIMEMultipart object for the email
         msg = MIMEMultipart()
         msg['From'] = self.sender_email

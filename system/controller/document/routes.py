@@ -194,3 +194,11 @@ def delete_document(document_uid):
         return jsonify({"message": "Document deleted successfully"}), 200
     else:
         return jsonify({"error": "Failed to delete document"}), 404
+
+
+@documents.route('/<document_uid>/audit-reminder', methods=['POST'], strict_slashes=False)
+def audit_reminder(document_uid):
+    if document_service.document_reminder(document_uid):
+        return jsonify({"message": "Notify auditor of ducument successfully"}), 200
+    else:
+        return jsonify({"error": "Failed to notify auditor"}), 404

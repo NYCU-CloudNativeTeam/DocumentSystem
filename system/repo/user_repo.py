@@ -55,3 +55,15 @@ class UserRepository:
             User: The user object if found, otherwise None.
         """
         return User.query.filter_by(name=name).first()
+
+    def find_user_by_id(self, user_id: str) -> User:
+        """
+        Find a user by their full name from the database.
+
+        Args:
+            name (str): The full name of the user to search for.
+
+        Returns:
+            User: The user object if found, otherwise None.
+        """
+        return User.query.filter_by(id=user_id).first()

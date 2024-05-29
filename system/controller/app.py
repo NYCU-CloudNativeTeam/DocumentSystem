@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from .document.routes import documents
 from .auth.routes import auth
-from .notification.routes import notify
+# from .notification.routes import notify
 from .audit.routes import audit
 from .account.routes import account
 from .llm.routes import llm
@@ -78,8 +78,8 @@ def init_dummy(db):
         document_repo.create_document(i)
 
     audit_status_1 = Audit(uid='audit1', document_id=document1.id, creator_id=user1.id, audit_status_id=status1.id)
-    audit_status_2 = Audit(uid='audit2', document_id=document2.id, creator_id=user1.id, audit_status_id=status2.id)
-    audit_status_3 = Audit(uid='audit3', document_id=document3.id, creator_id=user1.id, audit_status_id=status3.id)
+    audit_status_2 = Audit(uid='audit2', document_id=document2.id, creator_id=user2.id, audit_status_id=status2.id)
+    audit_status_3 = Audit(uid='audit3', document_id=document3.id, creator_id=user3.id, audit_status_id=status3.id)
     audit_repo.create_audit(audit_status_1)
     audit_repo.create_audit(audit_status_2)
     audit_repo.create_audit(audit_status_3)
@@ -118,7 +118,7 @@ def create_app():
 
     # register auth component
     # and also add prefix /auth of URL
-    app.register_blueprint(notify, url_prefix='/notify')
+    # app.register_blueprint(notify, url_prefix='/notify')
 
     # register auth component
     # and also add prefix /auth of URL

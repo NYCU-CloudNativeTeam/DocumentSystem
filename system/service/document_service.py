@@ -4,11 +4,15 @@ from flask import current_app
 from model.document_model import Document, DocumentComment
 from repo.document_repo import DocumentRepository
 from repo.user_repo import UserRepository
+from repo.audit_repo import AuditRepository
+from service.notification_service import NotificationService
 
 class DocumentService:
     def __init__(self):
         self.document_repo = DocumentRepository()
         self.user_repo = UserRepository()
+        self.audit_repo = AuditRepository()
+        self.notification_service = NotificationService()
 
     def get_all_documents(self, sort: str) -> Optional[List[Dict]]:
         """
@@ -140,5 +144,38 @@ class DocumentService:
                 return False
         except Exception as e:
             current_app.logger.error(f"Error when attempting to delete document with UID: {document_uid}")
+            current_app.logger.error(e)
+            return False
+
+    def document_reminder(self, document_uid: str):
+        try:
+            # get document first
+            document = self.document_repo.get_document_by_uid(document_uid)
+            if document:
+                # get auditor by document id
+                audit = self.audit_repo.get_audit_by_document_id(document.id)
+
+                # search username
+                auditor = self.user_repo.find_user_by_id(audit.creator_id)
+                current_app.logger.info(
+                    f"Found user id: {auditor.id}, name: {auditor.name}, "
+                    f"username: {auditor.username} of document UID: {document_uid}"
+                )
+
+                # send notifitication
+                self.notification_service.publisher_to_queue(
+                    third_party = "email",
+                    title = "New Document Review Notification", 
+                    content = f"Dear {auditor.name},"
+                        f"You have new document review"
+                        f"Please login to system to review",
+                    recipient = f"{auditor.mail}",
+                )
+                return True
+            else:
+                current_app.logger.info(f"No document found with UID: {document_uid}")
+                return False
+        except Exception as e:
+            current_app.logger.error(f"Error when attempting to notify to auditor of document UID: {document_uid}")
             current_app.logger.error(e)
             return False
