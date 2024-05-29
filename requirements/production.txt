@@ -10,3 +10,5 @@ Flask-SQLAlchemy==3.1.1
 PyMySQL==1.1.0
 cryptography==42.0.7
 openai==0.28.0
+google-auth==1.27.0
+google-auth-oauthlib==0.4.2

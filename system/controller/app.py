@@ -10,6 +10,7 @@ from .auth.routes import auth
 from .audit.routes import audit
 from .account.routes import account
 from .llm.routes import llm
+from .googleAuth.routes import googleAuth
 from .users.routes import users
 from .config import Config
 from model.base_model import db
@@ -91,6 +92,7 @@ def create_app():
 
     # create instance
     app = Flask(__name__)
+    app.secret_key = os.getenv("SECRET_KEY")
 
     # Config for SQLAlchemy
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
@@ -133,6 +135,10 @@ def create_app():
     # and also add prefix /llm of URL
     app.register_blueprint(llm, url_prefix='/llm')
 
+    # register auth component
+    # and also add prefix /sign-in of URL
+    app.register_blueprint(googleAuth, url_prefix='/sign-in')
+    
     app.register_blueprint(users, url_prefix='/users')
 
     # import admin and register
