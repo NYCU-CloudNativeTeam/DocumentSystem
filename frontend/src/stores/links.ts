@@ -10,7 +10,7 @@ export const useLinksStore = defineStore('links', () => {
     },
     {
       title: 'Audits',
-      url: '/about',
+      url: '/audit',
       icon: 'mdi-eye-outline'
     }
   ])
