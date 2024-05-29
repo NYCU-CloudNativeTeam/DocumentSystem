@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 from repo.user_repo import UserRepository
 from model.user_model import User
@@ -122,3 +122,21 @@ class UserService:
         if user:
             return user
         return None
+    
+    def get_user_info_by_name(self, name: str) -> List[dict]:
+        """
+        Retrieve detailed information about users by their name.
+
+        Args:
+            name (str): Full name of the user to search for in the database.
+
+        Returns:
+            List[dict]: A list of dictionaries containing user details such as name, email, and profile picture URL.
+        """
+        users = self.user_repository.find_users_by_name(name)
+        return [{
+                "name": user.name,
+                "email": user.mail,
+                "profilePictureUrl": user.third_party_info
+            } for user in users
+        ]

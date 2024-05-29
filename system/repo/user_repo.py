@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from model.user_model import User
 from model.base_model import db
 
@@ -67,3 +67,15 @@ class UserRepository:
             User: The user object if found, otherwise None.
         """
         return User.query.filter_by(id=user_id).first()
+
+    def find_users_by_name(self, name: str) -> List[User]:
+        """
+        Find users by their full name from the database.
+
+        Args:
+            name (str): The full name of the user(s) to search for.
+
+        Returns:
+            List[User]: A list of User objects with the given name. Returns an empty list if no users are found.
+        """
+        return User.query.filter_by(name=name).all()
