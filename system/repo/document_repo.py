@@ -30,7 +30,7 @@ class DocumentRepository:
             return DocumentPermission.query.filter_by(document_id=document.id).all()
         return []
 
-    def get_permission_by_document_and_user(self, document_id: int, user_id: int) -> Optional[DocumentPermission]:
+    def get_permission_by_document_and_user(self, document_id: int, user_id: int) -> DocumentPermission:
         return DocumentPermission.query.filter_by(document_id=document_id, user_id=user_id).first()
 
     def save(self, entity) -> None:

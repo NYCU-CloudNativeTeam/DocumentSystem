@@ -4,7 +4,8 @@ from flask import Blueprint, request, jsonify, current_app
 from service.document_service import DocumentService
 from service.audit_service import AuditService
 from .schema import NewDocumentSchema, UpdateDocumentSchema
-from ..util import validate_jsonfrom model.document_model import Document, DocumentStatus, DocumentComment, DocumentPermission, DocumentPermissionType
+from ..util import validate_json
+from model.document_model import Document, DocumentStatus, DocumentComment, DocumentPermission, DocumentPermissionType
 
 documents = Blueprint('documents', __name__)
 
@@ -156,6 +157,11 @@ def submit_audit_result(document_uid):
         audit_status = data.get('auditStatus')
         rejected_reason = data.get('rejectedReason')
 
+        if 'auditStatus' not in data:
+            return jsonify({"error": f"Missing parameter: 'auditStatus'"}), 400
+        if 'rejectedReason' not in data:
+            return jsonify({"error": f"Missing parameter: 'rejectedReason'"}), 400
+
         audit_result = audit_service.submit_audit_result(
             document_uid = document_uid,
             audit_status = audit_status, 
@@ -203,7 +209,7 @@ def audit_reminder(document_uid):
     else:
         return jsonify({"error": "Failed to notify auditor"}), 404
 
-@documents.route('/documents/<string:document_uid>/permissions', methods=['GET'])
+@documents.route('/<string:document_uid>/permissions', methods=['GET'])
 def get_document_permissions(document_uid):
     try:
         permissions = document_service.get_document_permissions(document_uid)
@@ -212,7 +218,7 @@ def get_document_permissions(document_uid):
         current_app.logger.error(f"Error fetching document permissions: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-@documents.route('/documents/<string:document_uid>/permissions', methods=['PUT'])
+@documents.route('/<string:document_uid>/permissions', methods=['PUT'])
 def update_document_permission(document_uid):
     data = request.get_json()
     if 'username' not in data or 'permissionType' not in data:
@@ -228,7 +234,7 @@ def update_document_permission(document_uid):
         current_app.logger.error(f"Error updating document permission: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-@documents.route('/documents/<string:document_uid>/name', methods=['PUT'])
+@documents.route('/<string:document_uid>/name', methods=['PUT'])
 def update_document_name(document_uid):
     data = request.get_json()
     if 'name' not in data:
