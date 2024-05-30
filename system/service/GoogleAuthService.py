@@ -16,11 +16,12 @@ class GoogleAuthService:
         self.flow = Flow.from_client_secrets_file(
             client_secrets_file=self.client_secrets_json,
             scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
-            #redirect_uri="http://localhost/callback"
-            redirect_uri="https://redesigned-lamp-qgw7w95jg4r2xjjw-5000.app.github.dev/sign-in/callback"
+            redirect_uri="http://localhost/callback"
+            #redirect_uri="https://redesigned-lamp-qgw7w95jg4r2xjjw-5000.app.github.dev/sign-in/callback"
         )
 
-    def get_authorization_ugitthorization_url, state = self.flow.authorization_url()
+    def get_authorization_url(self):
+        authorization_url, state = self.flow.authorization_url()
         session["state"] = state
         return authorization_url
 
@@ -46,23 +47,8 @@ class GoogleAuthService:
         user_info = {
             "google_id": id_info.get("sub"),
             "name": id_info.get("name"),
-            "iss": id_info.get("iss"),
-            "azp": id_info.get("azp"),
-            "aud": id_info.get("aud"),
-            "sub": id_info.get("sub"),
             "email": id_info.get("email"),
-            "email_verified": id_info.get("email_verified"),
-            "at_hash": id_info.get("at_hash"),
-            "picture": id_info.get("picture"),
-            "given_name": id_info.get("given_name"),
-            "family_name": id_info.get("family_name"),
-            "locale": id_info.get("locale"),
-            "iat": id_info.get("iat"),
-            "exp": id_info.get("exp"),
-            "jti": id_info.get("jti"),
-            "alg": id_info.get("alg"),
-            "kid": id_info.get("kid"),
-            "typ": id_info.get("typ"),
+            "picture": id_info.get("picture")
         }
         session.update(user_info)
         return user_info
