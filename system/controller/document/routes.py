@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify, current_app
 from service.document_service import DocumentService
 from service.audit_service import AuditService
 from .schema import NewDocumentSchema, UpdateDocumentSchema
-from ..util import validate_json
+from ..util import validate_jsonfrom model.document_model import Document, DocumentStatus, DocumentComment, DocumentPermission, DocumentPermissionType
 
 documents = Blueprint('documents', __name__)
 

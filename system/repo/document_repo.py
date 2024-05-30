@@ -24,6 +24,19 @@ class DocumentRepository:
     def update_document(self, document: Document):
         db.session.commit()
 
+    def get_permissions_by_document_uid(self, uid: str) -> List[DocumentPermission]:
+        document = self.get_document_by_uid(uid)
+        if document:
+            return DocumentPermission.query.filter_by(document_id=document.id).all()
+        return []
+
+    def get_permission_by_document_and_user(self, document_id: int, user_id: int) -> Optional[DocumentPermission]:
+        return DocumentPermission.query.filter_by(document_id=document_id, user_id=user_id).first()
+
+    def save(self, entity) -> None:
+        db.session.add(entity)
+        db.session.commit()
+
     def create_document_status(self, document_status: DocumentStatus) -> DocumentStatus:
         """Add a new user to the database.
 
