@@ -39,21 +39,6 @@ def protected_area():
     return f"Hello {session['name']}! <br/> <a href='/logout'><button>Logout</button></a><br>\
                 information<br>\
                 google_id : {session['google_id']}<br>\
-                iss : {session['iss']}<br>\
-                azp : {session['azp']}<br>\
-                aud : {session['aud']}<br>\
-                sub : {session['sub']}<br>\
                 email : {session['email']}<br>\
-                email_verified : {session['email_verified']}<br>\
-                at_hash : {session['at_hash']}<br>\
                 name : {session['name']}<br>\
-                picture : {session['picture']}<br>\
-                given_name : {session['given_name']}<br>\
-                family_name : {session['family_name']}<br>\
-                locale : {session['locale']}<br>\
-                iat : {session['iat']}<br>\
-                exp : {session['exp']}<br>\
-                jti : {session['jti']}<br>\
-                alg : {session['alg']}<br>\
-                kid : {session['kid']}<br>\
-                typ : {session['typ']}<br>"
+                picture : {session['picture']}<br>"
