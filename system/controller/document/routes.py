@@ -171,7 +171,9 @@ def get_audit_result(document_uid):
     Returns:
         A JSON response containing the audit results if found, or an error message if not found.
     """
+    print("in controller/document/routes")
     audit_result = audit_service.get_audit_result(document_uid)
+    print("after controller/document/routes/audit_result")
     if audit_result:
         return jsonify(audit_result), 200
     else:
@@ -196,6 +198,11 @@ def submit_audit_result(document_uid):
         # Possible values: "approved(1)", "rejected(2)", "pending(3)"
         audit_status = data.get('auditStatus')
         rejected_reason = data.get('rejectedReason')
+        
+        required_fields = ['auditStatus', 'rejectedReason']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing parameter: '{field}'"}), 400
 
         audit_result = audit_service.submit_audit_result(
             document_uid = document_uid,
@@ -207,6 +214,5 @@ def submit_audit_result(document_uid):
             return jsonify({"message": "Audit status updated successfully"}), 200
         else:
             return jsonify({"error": "Failed to update audit status"}), 400
-    except KeyError as e:
-        return jsonify(error=f"Missing parameter: {str(e)}"), 400
+    except Exception as e:
         return jsonify({"error": "Internal server error"}), 500
