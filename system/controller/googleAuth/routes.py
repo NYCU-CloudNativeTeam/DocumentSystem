@@ -12,7 +12,7 @@ def login_is_required(function):
             return function()
     return wrapper
 
-@googleAuth.route("/login", methods=["GET"])
+@googleAuth.route("/", methods=["GET"])
 def login():
     authorization_url = auth_service.get_authorization_url()
     return redirect(authorization_url)
@@ -22,18 +22,15 @@ def callback():
     auth_service.fetch_token()
     auth_service.validate_state()
     auth_service.get_user_info()
-    return redirect("/protected_area")
+    return redirect("/test_page_protected_area")
 
 @googleAuth.route("/logout")
 def logout():
     auth_service.clear_session()
-    return redirect("/")
+    return redirect("/test_page/")
 
-@googleAuth.route("/")
-def index():
-    return "Hello World <a href='/sign-in/login'><button>Login</button></a>"
-
-@googleAuth.route("/protected_area")
+#Test use page(After logging in)
+@googleAuth.route("/test_page_protected_area")
 @login_is_required
 def protected_area():
     return f"Hello {session['name']}! <br/> <a href='/logout'><button>Logout</button></a><br>\
@@ -42,3 +39,8 @@ def protected_area():
                 email : {session['email']}<br>\
                 name : {session['name']}<br>\
                 picture : {session['picture']}<br>"
+
+#Test use page(Before logging in)
+@googleAuth.route("/test_page")
+def index():
+    return "Hello World <a href='/sign-in/'><button>Login</button></a>"
