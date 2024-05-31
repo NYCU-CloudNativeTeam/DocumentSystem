@@ -12,6 +12,45 @@ def login_is_required(function):
             return function()
     return wrapper
 
+@googleAuth.route("/", methods=["POST"], strict_slashes=False)
+def get_session_inf():
+    """
+    retrun sign-in user information inculde id 、 username 、 name
+
+    Example:
+        Use the following curl command to call the endpoint:
+            ```bash
+            curl -i -X POST http://localhost:5000/sign-in \
+            -H "Content-Type: application/json" \
+            -d '{}'
+            ```
+
+    Args:
+        JSON payload format:
+            {
+	            // Anything needed for the third-party account
+            }
+
+
+    Returns:
+        Expected successful response format:
+            {
+                "id": "12345678",
+	            "username": "albert123@gmail.com",
+	            "name": "Albert",
+            }
+        
+        Error response format:
+            {
+                "result": "Session is empty"
+            }
+    """
+    if 'google_id' in session:
+        return jsonify({"id": session['google_id'],
+         "username": session['email'], 
+         "name": session['name']}), 200
+    return jsonify({"result": "Session is empty"}), 404
+
 @googleAuth.route("/", methods=["GET"])
 def login():
     authorization_url = auth_service.get_authorization_url()
