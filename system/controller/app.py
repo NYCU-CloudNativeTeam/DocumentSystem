@@ -93,7 +93,8 @@ def create_app():
     # create instance
     app = Flask(__name__)
     app.secret_key = os.getenv("SECRET_KEY")
-
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1" # to allow Http traffic for local dev
+    
     # Config for SQLAlchemy
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
 
