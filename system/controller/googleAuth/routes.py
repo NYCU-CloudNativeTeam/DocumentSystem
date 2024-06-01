@@ -61,18 +61,18 @@ def callback():
     auth_service.fetch_token()
     auth_service.validate_state()
     auth_service.get_user_info()
-    return redirect("/test_page_protected_area")
+    return redirect("/sign-in/test_page_protected_area")
 
 @googleAuth.route("/logout")
 def logout():
     auth_service.clear_session()
-    return redirect("/test_page/")
+    return redirect("/sign-in/test_page")
 
 #Test use page(After logging in)
 @googleAuth.route("/test_page_protected_area")
 @login_is_required
 def protected_area():
-    return f"Hello {session['name']}! <br/> <a href='/logout'><button>Logout</button></a><br>\
+    return f"Hello {session['name']}! <br/> <a href='/sign-in/logout'><button>Logout</button></a><br>\
                 information<br>\
                 google_id : {session['google_id']}<br>\
                 email : {session['email']}<br>\
