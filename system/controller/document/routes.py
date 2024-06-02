@@ -128,6 +128,9 @@ def get_audit_result(document_uid):
     Args:
         document_uid (str): The unique identifier for the document.
 
+    Example:
+        curl -X GET  http://localhost:8080/api/v1/documents/doc1/audit-result
+
     Returns:
         A JSON response containing the audit results if found, or an error message if not found.
     """
