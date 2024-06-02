@@ -97,17 +97,16 @@ class AuditService:
         document = self.document_repo.get_document_by_uid(document_uid)
         if document:
             document_id = document.id
+            current_app.logger.info(f"Find document id: {document_id} for document UID: {document_uid}")
             audit = self.audit_repo.get_audit_by_document_id(document_id)
             if audit:
                 audit_status = self.audit_repo.get_audit_status_by_audit_status_id(audit.audit_status_id)
                 if audit_status:
-                    print("audit_status", audit_status)
                     audit_status_value = audit_status.audit_status_value
-                    print("audit_status_value", audit_status_value)
                     current_app.logger.info(f"audit_result is {audit_status_value}")
                     # possible values 1 means approved
                     if audit_status_value == 1:
-                        auditor = self.user_repo.find_user_by_name(audit_status.name)
+                        auditor = self.user_repo.find_user_by_id(audit.creator_id)
                         audit_result = {
                             'auditUid': audit.uid,
                             'documentUid': document_uid,
@@ -121,8 +120,7 @@ class AuditService:
                         }
                     # 2 means rejected
                     elif audit_status_value == 2:
-                        auditor = self.user_repo.find_user_by_name(audit_status.name)
-                        print("auditor", auditor)
+                        auditor = self.user_repo.find_user_by_id(audit.creator_id)
                         audit_result = {
                             'auditUid': audit.uid,
                             'documentUid': document_uid,
@@ -137,7 +135,7 @@ class AuditService:
                         }
                     # 3 means pending
                     elif audit_status_value == 3:
-                        auditor = self.user_repo.find_user_by_name(audit_status.name)
+                        auditor = self.user_repo.find_user_by_id(audit.creator_id)
                         audit_result = {
                             'auditUid': audit.uid,
                             'documentUid': document_uid,
