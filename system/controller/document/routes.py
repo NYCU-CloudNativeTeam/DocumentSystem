@@ -153,6 +153,11 @@ def submit_audit_result(document_uid):
 
     Returns:
         A JSON response indicating whether the audit status was successfully updated or if the update failed.
+
+    Example:
+        curl -X POST "http://localhost:8080/api/v1/documents/doc1/audit-result" \
+            -H "Content-Type: application/json" \
+            -d '{"auditStatus": 1, "rejectedReason": "Not applicable"}'
     """
     try:
         data = request.get_json()

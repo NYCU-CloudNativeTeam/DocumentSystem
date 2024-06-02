@@ -202,7 +202,6 @@ class AuditService:
                     # possible values: "approved(1)", "rejected(2)", "pending(3)"
                     # get current audit status value
                     origion_audit_status_value = origion_audit_status.audit_status_value
-                    print("origion_audit_status_value", origion_audit_status_value)
                     
                     # if document still pending, update to new audit status
                     if origion_audit_status_value == 3:
