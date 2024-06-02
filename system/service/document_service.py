@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional
 from uuid import uuid4
 from flask import current_app
-from model.document_model import Document, DocumentComment
+from model.document_model import Document, DocumentPermissionType
 from repo.document_repo import DocumentRepository
 from repo.user_repo import UserRepository
 from repo.audit_repo import AuditRepository
@@ -181,7 +181,9 @@ class DocumentService:
             return False
     
     def get_document_permissions(self, document_uid: str) -> List[Dict]:
-        document_permissions = self.document_repo.get_permissions_by_document_uid(document_uid)
+        document_id = self.document_repo.get_document_by_uid(document_uid).id
+        document_permissions = self.document_repo.get_permissions_by_document_id(document_id)
+        current_app.logger.info(f"Get {len(document_permissions)} document record of document uid: {document_uid}")
         if document_permissions:
             permissions_list = []
             for perm in document_permissions:
@@ -200,18 +202,24 @@ class DocumentService:
             return permissions_list
         else:
             # cannot find permissions by UID
-                current_app.logger.info(f"Cannot get permissions by document UID {document_uid}")
-                return None
+            current_app.logger.info(f"Cannot get permissions by document UID {document_uid}")
+            return None
 
-    def update_document_permission(self, uid: str, username: str, permission_type: int) -> None:
+    def update_document_permission(self, uid: str, username: str, permission_type: int) -> bool:
         document = self.document_repo.get_document_by_uid(uid)
+        if self.document_repo.is_document_permission_type_exist(permission_type) == False:
+            current_app.logger.info(f"Document permisssion type: {permission_type} not exist")
+            return False
+
         if document:
             user = self.user_repo.find_user_by_username(username)
             if user:
                 document_permission = self.document_repo.get_permission_by_document_and_user(document.id, user.id)
                 if document_permission:
                     document_permission.document_permission_type_id = permission_type
-                    self.document_repo.save(document_permission)
+                    self.document_repo.update_document_permission(document_permission)
+                    current_app.logger.info(f"update from {document_permission.document_permission_type_id} to {permission_type}")
+                    return True
                 else:
                     current_app.logger.info(f"Error! Cannot get document_permission by document and user ID: {document.id}, {user.id}")
                     return None
@@ -226,8 +234,16 @@ class DocumentService:
         document = self.document_repo.get_document_by_uid(uid)
         if document:
             document.name = new_document_name
-            self.document_repo.save(document)
+            self.document_repo.update_document(document)
             return document
         else:
             current_app.logger.info(f"Error! Cannot get document by document_uid {uid}")
             return None
+        
+    def write_document_permission_type(
+        self,
+        name: str
+    ):
+        document_permission_type = DocumentPermissionType(name=name)
+        new_document_permission_type = self.document_repo.create_document_permission_type_not_exist(document_permission_type)
+        return new_document_permission_type

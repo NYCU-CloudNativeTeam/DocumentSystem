@@ -211,6 +211,10 @@ def audit_reminder(document_uid):
 
 @documents.route('/<string:document_uid>/permissions', methods=['GET'])
 def get_document_permissions(document_uid):
+    """
+    Example:
+        curl -X GET "http://127.0.0.1:8080/api/v1/documents/doc1/permissions"
+    """
     try:
         permissions = document_service.get_document_permissions(document_uid)
         return jsonify({"permissions": permissions}), 200
@@ -220,6 +224,12 @@ def get_document_permissions(document_uid):
 
 @documents.route('/<string:document_uid>/permissions', methods=['PUT'])
 def update_document_permission(document_uid):
+    """
+    Example:
+        curl -X PUT "http://127.0.0.1:8080/api/v1/documents/doc1/permissions" \
+             -H "Content-Type: application/json" \
+            -d '{"username": "adam", "permissionType": 0}'
+    """
     data = request.get_json()
     if 'username' not in data or 'permissionType' not in data:
         return jsonify({"error": "Username and permissionType fields are required"}), 400
@@ -228,14 +238,23 @@ def update_document_permission(document_uid):
     permission_type = data['permissionType']
 
     try:
-        document_service.update_document_permission(document_uid, username, permission_type)
-        return jsonify({"message": "Document permission updated successfully"}), 200
+        is_update_success = document_service.update_document_permission(document_uid, username, permission_type)
+        if is_update_success:
+            return jsonify({"message": "Document permission updated successfully"}), 200
+        else:
+            return jsonify({"message": "Document permission type not exist"}), 400
     except Exception as e:
         current_app.logger.error(f"Error updating document permission: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
 @documents.route('/<string:document_uid>/name', methods=['PUT'])
 def update_document_name(document_uid):
+    """
+        Example:
+            curl -X PUT "http://127.0.0.1:8080/api/v1/documents/doc1/name" \
+                -H "Content-Type: application/json" \
+                -d '{"name": "test"}'
+    """
     data = request.get_json()
     if 'name' not in data:
         return jsonify({"error": "Name field is required"}), 400
