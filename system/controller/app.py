@@ -85,6 +85,29 @@ def init_dummy(db):
     audit_repo.create_audit(audit_status_2)
     audit_repo.create_audit(audit_status_3)
 
+    document_permission_type1 = DocumentPermissionType(name='read')
+    document_permission_type2 = DocumentPermissionType(name='write')
+    document_repo.create_document_permission_type_not_exist(document_permission_type1)
+    document_repo.create_document_permission_type_not_exist(document_permission_type2)
+
+    document_permission1 = DocumentPermission(
+        document_id=document1.id, 
+        user_id=user1.id, 
+        document_permission_type_id=document_permission_type1.id
+    )
+    document_permission2 = DocumentPermission(
+        document_id=document1.id, 
+        user_id=user2.id, 
+        document_permission_type_id=document_permission_type2.id
+    )
+    document_permission3 = DocumentPermission(
+        document_id=document1.id, 
+        user_id=user3.id, 
+        document_permission_type_id=document_permission_type2.id
+    )
+    document_repo.create_document_permission(document_permission1)
+    document_repo.create_document_permission(document_permission2)
+    document_repo.create_document_permission(document_permission3)
 
 def create_app():
     load_dotenv()
