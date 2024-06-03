@@ -20,7 +20,7 @@ def get_documents():
     Example:
         Use the following curl command to call the endpoint with sorting by 'name':
             ```bash
-            curl -i -X GET 'http://localhost:5000/api/documents/?sort=name'
+            curl -i -X GET 'http://localhost:5000/documents?sort=name'
             ```
 
     Args:
@@ -45,7 +45,7 @@ def create_document(name, owner_id, document_status_id):
     Example:
         Use the following curl command to create a new document:
             ```bash
-            curl -i -X POST http://localhost:5000/api/documents/ \
+            curl -i -X POST http://localhost:5000/documents \
             -H "Content-Type: application/json" \
             -d '{
                 "name": "Project Proposal",
@@ -76,7 +76,7 @@ def update_document(uid, body, comments):
     Example:
         Use the following curl command to update a new document:
             ```bash
-            curl -i -X PUT http://localhost:5000/api/documents/doc1 \
+            curl -i -X PUT http://localhost:5000/documents/doc1 \
             -H "Content-Type: application/json" \
             -d '{
                 "body": "Updated body of the document.",
@@ -114,7 +114,7 @@ def get_document(uid):
     Example:
         Use the following curl command to retrieve a document by UID:
             ```bash
-            curl -i -X GET http://localhost:5000/api/documents/doc1
+            curl -i -X GET http://localhost:5000/documents/doc1
             ```
     """
     document = document_service.get_document(uid)

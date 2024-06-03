@@ -109,12 +109,13 @@ class DocumentService:
                         "inlineId": comment.inline_id,
                         "text": comment.text,
                         "commentor": {
-                            "name": comment.commentor.name,
+                            "name": self.user_repo.find_user_by_id(comment.commenter_id).name,
                         }
                     }
                     for comment in document_comments
                 ]
             }
+        current_app.logger.info(f"Get NO document by uid: {uid}")
         return None
 
     def delete_document_by_uid(self, document_uid: str):
