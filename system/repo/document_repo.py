@@ -4,7 +4,8 @@ from model.document_model import (
     Document,
     DocumentStatus,
     DocumentComment,
-    DocumentPermission
+    DocumentPermission,
+    DocumentPermissionType
 )
 from model.audit_model import Audit
 from model.base_model import db
@@ -22,6 +23,15 @@ class DocumentRepository:
         return Document.query.filter_by(uid=uid).first()
 
     def update_document(self, document: Document):
+        db.session.commit()
+
+    def get_permissions_by_document_id(self, id: str) -> List[DocumentPermission]:
+        return DocumentPermission.query.filter_by(document_id=id).all()
+
+    def get_permission_by_document_and_user(self, document_id: int, user_id: int) -> DocumentPermission:
+        return DocumentPermission.query.filter_by(document_id=document_id, user_id=user_id).first()
+
+    def update_document_permission(self, document_permission: DocumentPermission) -> None:
         db.session.commit()
 
     def create_document_status(self, document_status: DocumentStatus) -> DocumentStatus:
@@ -118,3 +128,30 @@ class DocumentRepository:
 
         db.session.delete(document)
         db.session.commit()
+
+    def create_document_permission_type_not_exist(self, document_permission_type: DocumentPermissionType):
+        """Create document permission type to database if not exist
+        """
+        existing_type = db.session.query(DocumentPermissionType).filter_by(
+            name=document_permission_type.name
+        ).first()
+        if existing_type is None:
+            db.session.add(document_permission_type)
+            db.session.commit()
+            return document_permission_type
+        else:
+            return existing_type
+
+    def create_document_permission(self, document_permission: DocumentPermission):
+        """Create document permission to database
+        """
+        db.session.add(document_permission)
+        db.session.commit()
+        return document_permission
+
+    def is_document_permission_type_exist(self, type_id):
+        document_permission_type = DocumentPermissionType.query.filter_by(id=type_id).first()
+        if document_permission_type:
+            return True
+        else:
+            return False

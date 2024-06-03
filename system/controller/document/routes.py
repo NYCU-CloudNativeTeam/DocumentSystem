@@ -5,6 +5,7 @@ from service.document_service import DocumentService
 from service.audit_service import AuditService
 from .schema import NewDocumentSchema, UpdateDocumentSchema
 from ..util import validate_json
+from model.document_model import Document, DocumentStatus, DocumentComment, DocumentPermission, DocumentPermissionType
 
 documents = Blueprint('documents', __name__)
 
@@ -127,6 +128,9 @@ def get_audit_result(document_uid):
     Args:
         document_uid (str): The unique identifier for the document.
 
+    Example:
+        curl -X GET  http://localhost:8080/api/v1/documents/doc1/audit-result
+
     Returns:
         A JSON response containing the audit results if found, or an error message if not found.
     """
@@ -149,12 +153,22 @@ def submit_audit_result(document_uid):
 
     Returns:
         A JSON response indicating whether the audit status was successfully updated or if the update failed.
+
+    Example:
+        curl -X POST "http://localhost:8080/api/v1/documents/doc1/audit-result" \
+            -H "Content-Type: application/json" \
+            -d '{"auditStatus": 1, "rejectedReason": "Not applicable"}'
     """
     try:
         data = request.get_json()
         # Possible values: "approved(1)", "rejected(2)", "pending(3)"
         audit_status = data.get('auditStatus')
         rejected_reason = data.get('rejectedReason')
+
+        if 'auditStatus' not in data:
+            return jsonify({"error": f"Missing parameter: 'auditStatus'"}), 400
+        if 'rejectedReason' not in data:
+            return jsonify({"error": f"Missing parameter: 'rejectedReason'"}), 400
 
         audit_result = audit_service.submit_audit_result(
             document_uid = document_uid,
@@ -202,3 +216,64 @@ def audit_reminder(document_uid):
         return jsonify({"message": "Notify auditor of ducument successfully"}), 200
     else:
         return jsonify({"error": "Failed to notify auditor"}), 404
+
+@documents.route('/<string:document_uid>/permissions', methods=['GET'])
+def get_document_permissions(document_uid):
+    """
+    Example:
+        curl -X GET "http://127.0.0.1:8080/api/v1/documents/doc1/permissions"
+    """
+    try:
+        permissions = document_service.get_document_permissions(document_uid)
+        return jsonify({"permissions": permissions}), 200
+    except Exception as e:
+        current_app.logger.error(f"Error fetching document permissions: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@documents.route('/<string:document_uid>/permissions', methods=['PUT'])
+def update_document_permission(document_uid):
+    """
+    Example:
+        curl -X PUT "http://127.0.0.1:8080/api/v1/documents/doc1/permissions" \
+             -H "Content-Type: application/json" \
+            -d '{"username": "adam", "permissionType": 0}'
+    """
+    data = request.get_json()
+    if 'username' not in data or 'permissionType' not in data:
+        return jsonify({"error": "Username and permissionType fields are required"}), 400
+
+    username = data['username']
+    permission_type = data['permissionType']
+
+    try:
+        is_update_success = document_service.update_document_permission(document_uid, username, permission_type)
+        if is_update_success:
+            return jsonify({"message": "Document permission updated successfully"}), 200
+        else:
+            return jsonify({"message": "Document permission type not exist"}), 400
+    except Exception as e:
+        current_app.logger.error(f"Error updating document permission: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@documents.route('/<string:document_uid>/name', methods=['PUT'])
+def update_document_name(document_uid):
+    """
+        Example:
+            curl -X PUT "http://127.0.0.1:8080/api/v1/documents/doc1/name" \
+                -H "Content-Type: application/json" \
+                -d '{"name": "test"}'
+    """
+    data = request.get_json()
+    if 'name' not in data:
+        return jsonify({"error": "Name field is required"}), 400
+    new_document_name = data['name']
+    
+    try:
+        updated_document = document_service.update_document_name(document_uid, new_document_name)
+        if updated_document:
+            return jsonify({"message": "Document name updated successfully"}), 200
+        else:
+            return jsonify({"error": "Document not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error updating document name: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500

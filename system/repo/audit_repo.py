@@ -32,10 +32,10 @@ class AuditRepository:
         """Update an existing audit status record."""
         db.session.commit()
 
-    def get_audit_by_document_id(self, document_uid: str) -> Audit:
-        """Get audit record by document UID."""
-        return Audit.query.filter_by(document_id=document_uid).first()
+    def get_audit_by_document_id(self, document_id: int) -> Audit:
+        """Get audit record by document ID."""
+        return Audit.query.filter_by(document_id=document_id).first()
 
-    def get_audit_status_by_audit_status_id(self, audit_status_uid: str) -> AuditStatus:
+    def get_audit_status_by_audit_status_id(self, audit_status_id: str) -> AuditStatus:
         """Get audit status by audit_status_id."""
-        return AuditStatus.query.filter_by(id=audit_status_uid).first()
+        return AuditStatus.query.filter_by(id=audit_status_id).first()
