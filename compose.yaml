@@ -52,6 +52,8 @@ services:
     image: document-system-api:0.0.1
     volumes:
       - ./system:/app
+    ports:
+      - "5000:5000"
     hostname: document-system-api
     networks:
       - document_system_network
