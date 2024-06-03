@@ -1,0 +1,62 @@
+version: '3'
+
+networks:
+  document_system_network:
+    driver: bridge
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: document-system-nginx:0.0.1
+    ports:
+      - "8080:8080"
+    hostname: document-system-nginx
+    networks:
+      - document_system_network
+
+  mysql:
+    build:
+      context: .
+      dockerfile: docker/mysql/Dockerfile
+    image: document-system-db:0.0.1
+    ports:
+      - "3306:3306"
+    hostname: mysql
+    networks:
+      - document_system_network
+    # volumes:
+    #   - mysql_data:/var/lib/mysql
+
+  rabbitmq:
+    image: rabbitmq:3.13-alpine
+    ports:
+      - "5672:5672"
+    hostname: document-system-rabbitmq
+    networks:
+      - document_system_network
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+      args:
+        ENVIRONMENT: dev
+    image: document-system-api:0.0.1
+    ports: 
+      - "5000:5000"
+    hostname: document-system-api
+    networks:
+      - document_system_network
+
+  email_notification_system:
+    build:
+      context: .
+      dockerfile: docker/email_notification_system/Dockerfile
+      args:
+        ENVIRONMENT: dev
+    image: document-system-email-notification-system:0.0.1
+    hostname: document-system-email-notification-system
+    networks:
+      - document_system_network
