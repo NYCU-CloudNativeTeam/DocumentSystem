@@ -58,7 +58,7 @@ services:
     networks:
       - document_system_network
     environment:
-      SQLALCHEMY_DATABASE_URI: mysql://admin:admin@mysql:3306/document_system
+      SQLALCHEMY_DATABASE_URI: mysql://root:nycu_is_good@mysql:3306/document_system
     depends_on:
       - mysql
 
