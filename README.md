@@ -22,6 +22,7 @@ The backend system of document system.
         $ docker compose up --build
         ```
     * backend running on `5000` port directly, Nginx expost `8080` port and rewrite `/api/v1` before redirect to backend server
+    * fill `system/service/client_secret.json` for Google Oauth
 * Testing
     * Run testing and generate report (on terminal and html)
         ```
@@ -32,6 +33,14 @@ The backend system of document system.
         ```
         $ cd system && python -m http.server
         ```
+* k8s
+    ```
+    $ cd k8s
+    $ kubectl create namesapce document-system
+    $ kubectl apply -f deployment.yaml
+    $ kubectl apply -f service.yaml
+    ```
+
 # final-project-frontend
 
 This template should help get you started developing with Vue 3 in Vite.

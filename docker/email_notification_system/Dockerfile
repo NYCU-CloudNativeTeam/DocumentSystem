@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./system .
 
-CMD sleep 10; python -m email_notification_system.main
+CMD sleep 15; python -m email_notification_system.main
