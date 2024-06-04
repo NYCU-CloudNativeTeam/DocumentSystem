@@ -46,6 +46,8 @@ def get_audits():
                         "name": "Document Title",
                         "status": 1,
                         "auditCreatedTime": "2000-09-27T00:00:00Z"
+                        "auditedTime": "2000-09-27T00:00:00Z",
+                        "auditor": "Albert",
                     },
                     // Additional documents...
                 ]

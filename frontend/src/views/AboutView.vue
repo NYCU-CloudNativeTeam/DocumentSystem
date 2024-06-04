@@ -1,7 +1,10 @@
 <template>
-  <div class="about">
-    <h1>This is an about page</h1>
-  </div>
+  <v-main>
+    <v-app-bar height="75"> </v-app-bar>
+    <div class="about">
+      <h1>This is an about page</h1>
+    </div>
+  </v-main>
 </template>
 
 <style>

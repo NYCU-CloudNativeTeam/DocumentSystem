@@ -7,12 +7,18 @@ from model.document_model import (
     DocumentPermission,
     DocumentPermissionType
 )
+from model.user_model import User
 from model.audit_model import Audit
 from model.base_model import db
+from sqlalchemy import or_
 
 class DocumentRepository:
-    def get_all_documents(self, sort: str = 'date') -> List[Document]:
-        return Document.query.order_by(sort).all()
+    def get_all_documents(self, user: User, sort: str = 'date') -> List[Document]:
+        return Document.query.\
+            join(DocumentPermission, DocumentPermission.document_id == Document.id, isouter=True).\
+            filter(or_(DocumentPermission.user_id == user.id, Document.owner_id == user.id)).\
+            order_by(sort).\
+            all()
 
     def create_document(self, document: Document) -> Document:
         db.session.add(document)
@@ -25,13 +31,27 @@ class DocumentRepository:
     def update_document(self, document: Document):
         db.session.commit()
 
-    def get_permissions_by_document_id(self, id: str) -> List[DocumentPermission]:
-        return DocumentPermission.query.filter_by(document_id=id).all()
+    def get_permissions(self, user_id: int, document_id: str) -> List[DocumentPermission]:
+        return DocumentPermission.query.\
+            filter_by(document_id=document_id).\
+            filter(DocumentPermission.user_id != user_id).\
+            join(Document, Document.id == DocumentPermission.document_id).\
+            filter(Document.owner_id != DocumentPermission.user_id).\
+            all()
 
     def get_permission_by_document_and_user(self, document_id: int, user_id: int) -> DocumentPermission:
         return DocumentPermission.query.filter_by(document_id=document_id, user_id=user_id).first()
 
     def update_document_permission(self, document_permission: DocumentPermission) -> None:
+        db.session.commit()
+
+    def add_document_permission(self, user: User, document: Document, document_permission_type_id: int) -> None:
+        permission = DocumentPermission(
+            user_id=user.id,
+            document_id=document.id,
+            document_permission_type_id=document_permission_type_id
+        )
+        db.session.add(permission)
         db.session.commit()
 
     def create_document_status(self, document_status: DocumentStatus) -> DocumentStatus:
@@ -58,13 +78,13 @@ class DocumentRepository:
         This function fetches comments associated with a given document by their
         unique identifier (document_id), and applies updates specified in the comments_updates list.
         If cannot find inline_id means new comment, also write to database.
-        Each entry in the list should include the unique inline identifier for the comment and 
+        Each entry in the list should include the unique inline identifier for the comment and
         the fields to be updated.
 
         Args:
             document_id (int): The unique identifier of the document whose comments are to be updated.
             comments_updates (list): A list of dictionaries containing updates for each comment.
-                                    Each dictionary must include the 'inlineId' of the comment 
+                                    Each dictionary must include the 'inlineId' of the comment
                                     and the fields to be updated, such as 'text'.
 
         Returns:
@@ -73,10 +93,10 @@ class DocumentRepository:
         try:
             for update in comments_updates:
                 comment = DocumentComment.query.filter_by(
-                    document_id=document_id, 
+                    document_id=document_id,
                     inline_id=update['inline_id']
                 ).first()
-        
+
                 if comment:
                     # Update existing comment
                     comment.text = update['text']
@@ -90,7 +110,7 @@ class DocumentRepository:
                         commenter_id=update['commentor_id']
                     )
                     db.session.add(new_comment)
-            
+
             db.session.commit()
             return True
         except Exception as e:
@@ -113,13 +133,13 @@ class DocumentRepository:
             List[DocumentComment]: A list of DocumentComment model instances that are associated with the document.
         """
         return DocumentComment.query.filter_by(document_id=document_id).all()
-    
+
     def delete_document(self, document: Document) -> bool:
         """Delete a document given found document of database
 
         Args:
             document (Document): The document instance to be deleted.
-        
+
         Returns:
             None
         """
@@ -155,3 +175,14 @@ class DocumentRepository:
             return True
         else:
             return False
+
+    def get_document_mode(self, user: User, document: Document):
+        if document.owner_id == user.id:
+            return 2
+        document_permission = DocumentPermission.query.\
+            filter_by(user_id=user.id, document_id=document.id)\
+            .first()
+        if document_permission:
+            return document_permission.document_permission_type_id
+        else:
+            return None

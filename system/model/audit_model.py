@@ -7,7 +7,7 @@ class Audit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uid = db.Column(db.String(50), unique=True, nullable=False)
     document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=False)
-    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    auditor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     audit_status_id = db.Column(db.Integer, db.ForeignKey('audit_status.id'), nullable=False)
     rejected_reason = db.Column(db.Text, nullable=True)
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -19,12 +19,15 @@ class Audit(db.Model):
             'id': self.id,
             'uid': self.uid,
             'document_id': self.document_id,
-            'creator_id': self.creator_id,
+            'auditor_id': self.auditor_id,
             'audit_status_id': self.audit_status_id,
             'rejected_reason': self.rejected_reason,
             'created_date': self.created_date,
             'updated_date': self.updated_date
         }
+
+    auditor = db.relationship('User', backref='audits')
+    document = db.relationship('Document', backref='audits')
 
 class AuditStatus(db.Model):
     __tablename__ = 'audit_status'
@@ -33,4 +36,3 @@ class AuditStatus(db.Model):
     audit_status_value = db.Column(db.Integer)
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-

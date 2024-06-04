@@ -16,7 +16,8 @@ class GoogleAuthService:
         self.flow = Flow.from_client_secrets_file(
             client_secrets_file=self.client_secrets_json,
             scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
-            redirect_uri="http://localhost:5000/sign-in/callback"
+            #redirect_uri="http://localhost:5000/sign-in/callback"
+            redirect_uri="https://8475-36-226-195-102.ngrok-free.app/api/v1/sign-in/callback"
             #redirect_uri="https://bb50-140-113-216-23.ngrok-free.app/sign-in/callback"
         )
 

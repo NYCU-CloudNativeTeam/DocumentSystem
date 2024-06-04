@@ -15,7 +15,7 @@ class DocumentService:
         self.audit_repo = AuditRepository()
         self.notification_service = NotificationService()
 
-    def get_all_documents(self, sort: str) -> Optional[List[Dict]]:
+    def get_all_documents(self, user_id: int, sort: str) -> Optional[List[Dict]]:
         """
         Retrieve a list of all documents sorted by a specified attribute.
 
@@ -38,13 +38,21 @@ class DocumentService:
             None explicitly, but logs an informational message if an exception
             occurs, indicating the unsupported sorting key used.
         """
+        def get_document_status(doc, user):
+            if doc.owner_id == user.id:
+                return 2
+            else:
+                return self.document_repo.get_permission_by_document_and_user(doc.id, user.id).document_permission_type_id
+
         try:
-            docs = self.document_repo.get_all_documents(sort)
+            user = self.user_repo.find_user_by_id(user_id)
+            docs = self.document_repo.get_all_documents(user, sort)
             docs_list = [
                 {
                     "uid": doc.uid,
                     "name": doc.name,
-                    "status": doc.document_status_id,
+                    "status": get_document_status(doc, user),
+                    "body": doc.body,
                 }
                 for doc in docs
             ]
@@ -84,7 +92,7 @@ class DocumentService:
             # update document comment
             is_updated_succesfully = self.document_repo.update_document_comments(
                 document_id = document.id,
-                comments_updates = comments 
+                comments_updates = comments
             )
 
             if is_updated_succesfully == False:
@@ -95,9 +103,12 @@ class DocumentService:
             return is_updated_succesfully
         return None
 
-    def get_document(self, uid: str) -> Optional[Dict]:
-        document = self.document_repo.get_document_by_uid(uid)
+    def get_document(self, user_id: str, document_uid: str) -> Optional[Dict]:
+        document = self.document_repo.get_document_by_uid(document_uid)
         if document:
+            user = self.user_repo.find_user_by_id(user_id)
+            document = self.document_repo.get_document_by_uid(document_uid)
+            mode = self.document_repo.get_document_mode(user, document)
             document_comments = self.document_repo.get_document_comment_by_document_id(document.id)
             current_app.logger.info(f"Get {len(document_comments)} comments of document (uid: {uid})")
             if document.lock_session is not "" and document.lock_session is not None:
@@ -116,7 +127,7 @@ class DocumentService:
                 "name": document.name,
                 "body": document.body,
                 "otherIsEditing": bool(document.lock_session),
-                "mode": document.document_status_id,
+                "mode": mode,
                 "comments": [
                     {
                         "inlineId": comment.inline_id,
@@ -140,7 +151,7 @@ class DocumentService:
                 session.pop('lock_session', None)
                 return {"state": "true"}
         return {"state": "false"}
-    
+
     def update_lock_session_by_uid(self, uid: str):
         document = self.document_repo.get_document_by_uid(uid)
         if document:
@@ -150,21 +161,21 @@ class DocumentService:
                 self.document_repo.update_document(document)
                 return {"state": "true", "lock_session": document.lock_session}
         return {"state": "false"}
-    
+
     def delete_document_by_uid(self, document_uid: str):
         """Delete a document from the database identified by its unique identifier (UID).
 
         This method attempts to find a document by its UID. If the document is found,
         it is deleted from the database. If the document is not found, it logs this information
-        and returns False. If any exception occurs during the process, 
+        and returns False. If any exception occurs during the process,
         it logs the error and also returns False.
 
         Args:
             document_uid (str): The unique identifier of the document to be deleted.
 
         Returns:
-            bool: True if the document is successfully deleted, False otherwise. 
-                False is returned both in the case where the document is not found 
+            bool: True if the document is successfully deleted, False otherwise.
+                False is returned both in the case where the document is not found
                 and in the case where an exception occurs.
         """
         try:
@@ -199,7 +210,7 @@ class DocumentService:
                 # send notifitication
                 self.notification_service.publisher_to_queue(
                     third_party = "email",
-                    title = "New Document Review Notification", 
+                    title = "New Document Review Notification",
                     content = f"Dear {auditor.name},"
                         f"You have new document review"
                         f"Please login to system to review",
@@ -213,10 +224,10 @@ class DocumentService:
             current_app.logger.error(f"Error when attempting to notify to auditor of document UID: {document_uid}")
             current_app.logger.error(e)
             return False
-    
-    def get_document_permissions(self, document_uid: str) -> List[Dict]:
+
+    def get_document_permissions(self, user_id: int, document_uid: str) -> List[Dict]:
         document_id = self.document_repo.get_document_by_uid(document_uid).id
-        document_permissions = self.document_repo.get_permissions_by_document_id(document_id)
+        document_permissions = self.document_repo.get_permissions(user_id, document_id)
         current_app.logger.info(f"Get {len(document_permissions)} document record of document uid: {document_uid}")
         if document_permissions:
             permissions_list = []
@@ -224,15 +235,15 @@ class DocumentService:
                 user = self.user_repo.find_user_by_id(perm.user_id)
                 if user:
                     permissions_list.append({
+                        "name": user.name,
                         "username": user.username,
-                        "mail": user.mail,
                         "permissionType": perm.document_permission_type_id
                     })
                 else:
                     # cannot find user by user ID in permissions
                     current_app.logger.info(f"Cannot get user by user ID in permissions {perm.user_id}")
                     return None
-                 
+
             return permissions_list
         else:
             # cannot find permissions by UID
@@ -255,8 +266,9 @@ class DocumentService:
                     current_app.logger.info(f"update from {document_permission.document_permission_type_id} to {permission_type}")
                     return True
                 else:
-                    current_app.logger.info(f"Error! Cannot get document_permission by document and user ID: {document.id}, {user.id}")
-                    return None
+                    # current_app.logger.info(f"Error! Cannot get document_permission by document and user ID: {document.id}, {user.id}")
+                    document_permission = self.document_repo.add_document_permission(user, document, permission_type)
+                    return True
             else:
                 current_app.logger.info(f"Error! Cannot get user by username {username}")
                 return None
@@ -273,7 +285,7 @@ class DocumentService:
         else:
             current_app.logger.info(f"Error! Cannot get document by document_uid {uid}")
             return None
-        
+
     def write_document_permission_type(
         self,
         name: str

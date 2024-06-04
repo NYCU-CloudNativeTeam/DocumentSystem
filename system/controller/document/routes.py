@@ -1,8 +1,9 @@
 from typing import List, Dict
 
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, session
 from service.document_service import DocumentService
 from service.audit_service import AuditService
+from service.user_service import UserService
 from .schema import NewDocumentSchema, UpdateDocumentSchema
 from ..util import validate_json
 from model.document_model import Document, DocumentStatus, DocumentComment, DocumentPermission, DocumentPermissionType
@@ -11,6 +12,7 @@ documents = Blueprint('documents', __name__)
 
 document_service = DocumentService()
 audit_service = AuditService()
+user_service = UserService()
 
 @documents.route('/', methods=['GET'], strict_slashes=False)
 def get_documents():
@@ -30,16 +32,17 @@ def get_documents():
         JSON response containing a list of documents.
     """
     sort = request.args.get('sort', 'created_date')
-    docs = document_service.get_all_documents(sort)
+    google_id = session['google_id']
+    user_id = user_service.get_user_by_google_id(google_id).id
+    docs = document_service.get_all_documents(user_id, sort)
     return jsonify({"documents": docs})
 
 @documents.route('/', methods=['POST'], strict_slashes=False)
-@validate_json(NewDocumentSchema)
-def create_document(name, owner_id, document_status_id):
+def create_document():
     """
     Create a new document based on provided data and return its unique identifier (UID).
 
-    This endpoint requires a JSON payload that includes the document's name, the owner's ID, 
+    This endpoint requires a JSON payload that includes the document's name, the owner's ID,
     and the document status ID. The document is then created in the database, and its UID is returned.
 
     Example:
@@ -57,6 +60,10 @@ def create_document(name, owner_id, document_status_id):
     Returns:
         JSON response with the UID of the newly created document.
     """
+    name = 'New Document'
+    google_id = session['google_id']
+    owner_id = user_service.get_user_by_google_id(google_id).id
+    document_status_id = 2
     document_uid = document_service.create_document(name, owner_id, document_status_id)
     return jsonify({"documentUid": document_uid}), 201
 
@@ -100,9 +107,9 @@ def get_document(uid):
     """
     Retrieve the document details by its unique identifier (UID).
 
-    This endpoint fetches detailed information about a specific document using its UID. 
-    It returns a JSON object containing all pertinent details of the document if found. 
-    If the document cannot be located, it returns a JSON response indicating that no document 
+    This endpoint fetches detailed information about a specific document using its UID.
+    It returns a JSON object containing all pertinent details of the document if found.
+    If the document cannot be located, it returns a JSON response indicating that no document
     was found with the provided UID.
 
     Args:
@@ -117,7 +124,8 @@ def get_document(uid):
             curl -i -X GET http://localhost:5000/documents/doc1
             ```
     """
-    document = document_service.get_document(uid)
+    user = user_service.get_user_by_google_id(session['google_id'])
+    document = document_service.get_document(user.id, uid)
     if 'state' in document:
         if document['state'] == 'session is locked by other user.':
             return jsonify({"error": "session is locked by other user"}), 400
@@ -161,7 +169,7 @@ def update_document_lock_session(document_uid):
         return jsonify(data), 200
     else:
         return jsonify(data), 400
-    
+
 @documents.route('/<string:document_uid>/audit-result', methods=['GET'])
 def get_audit_result(document_uid):
     """
@@ -187,9 +195,9 @@ def submit_audit_result(document_uid):
     """
     Submit or update the audit result for a specific document based on the provided UID.
 
-    This endpoint expects a JSON payload containing the audit UID, 
+    This endpoint expects a JSON payload containing the audit UID,
     audit status, and an optional rejected reason.
-    
+
     Args:
         document_uid (str): The unique identifier for the document.
 
@@ -214,7 +222,7 @@ def submit_audit_result(document_uid):
 
         audit_result = audit_service.submit_audit_result(
             document_uid = document_uid,
-            audit_status = audit_status, 
+            audit_status = audit_status,
             rejected_reason = rejected_reason
         )
 
@@ -265,8 +273,9 @@ def get_document_permissions(document_uid):
     Example:
         curl -X GET "http://127.0.0.1:8080/api/v1/documents/doc1/permissions"
     """
+    user_id = user_service.get_user_by_google_id(session['google_id']).id
     try:
-        permissions = document_service.get_document_permissions(document_uid)
+        permissions = document_service.get_document_permissions(user_id, document_uid)
         return jsonify({"permissions": permissions}), 200
     except Exception as e:
         current_app.logger.error(f"Error fetching document permissions: {str(e)}")
@@ -309,7 +318,7 @@ def update_document_name(document_uid):
     if 'name' not in data:
         return jsonify({"error": "Name field is required"}), 400
     new_document_name = data['name']
-    
+
     try:
         updated_document = document_service.update_document_name(document_uid, new_document_name)
         if updated_document:
