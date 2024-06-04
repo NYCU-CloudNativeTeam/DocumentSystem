@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional
 from uuid import uuid4
-from flask import current_app
+from flask import current_app, session
 from model.document_model import Document, DocumentPermissionType
 from repo.document_repo import DocumentRepository
 from repo.user_repo import UserRepository
@@ -101,13 +101,15 @@ class DocumentService:
             document_comments = self.document_repo.get_document_comment_by_document_id(document.id)
             current_app.logger.info(f"Get {len(document_comments)} comments of document (uid: {uid})")
             if document.lock_session is not "" and document.lock_session is not None:
-                lock_session = datetime.strptime(document.lock_session, "%Y-%m-%d %H:%M:%S")
-                if lock_session + timedelta(minutes=5) > datetime.now() :
-                    current_app.logger.info(f"Document Ud: {uid} is locked by other user.")
-                    return {
-                        "state": "session is locked by other user."
-                    }
+                if document.lock_session != session.get("lock_session"):
+                    lock_session = datetime.strptime(document.lock_session, "%Y-%m-%d %H:%M:%S")
+                    if lock_session + timedelta(minutes=5) > datetime.now() :
+                        current_app.logger.info(f"Document Ud: {uid} is locked by other user.")
+                        return {
+                            "state": "session is locked by other user."
+                        }
             document.lock_session = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            session["lock_session"] = document.lock_session
             self.document_repo.update_document(document)
             return {
                 "uid": document.uid,
@@ -132,17 +134,21 @@ class DocumentService:
     def delete_lock_session_by_uid(self, uid: str):
         document = self.document_repo.get_document_by_uid(uid)
         if document:
-            document.lock_session = ""
-            self.document_repo.update_document(document)
-            return {"state": "true"}
+            if session.get("lock_session") == document.lock_session:
+                document.lock_session = None
+                self.document_repo.update_document(document)
+                session.pop('lock_session', None)
+                return {"state": "true"}
         return {"state": "false"}
     
     def update_lock_session_by_uid(self, uid: str):
         document = self.document_repo.get_document_by_uid(uid)
         if document:
-            document.lock_session = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.document_repo.update_document(document)
-            return {"state": "true", "lock_session": document.lock_session}
+            if session.get("lock_session") == document.lock_session:
+                document.lock_session = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                session["lock_session"] = document.lock_session
+                self.document_repo.update_document(document)
+                return {"state": "true", "lock_session": document.lock_session}
         return {"state": "false"}
     
     def delete_document_by_uid(self, document_uid: str):
