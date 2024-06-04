@@ -96,26 +96,40 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: document-system-deployment
+  name: frontend
   namespace: document-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: document-system
+      app: frontend
   template:
     metadata:
       labels:
-        app: document-system
+        app: frontend
     spec:
       containers:
-
-        # volumeMounts:
-        # - name: frontend-dist
-        #   mountPath: /usr/share/nginx/html
-        # - name: frontend
-        #   mountPath: /app
-
+      - name: frontend
+        image: document-system-frontend:0.0.1
+        ports:
+        - containerPort: 5173
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: document-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
       - name: api
         image: document-system-api:0.0.1
         ports:
@@ -123,23 +137,5 @@ spec:
         env:
         - name: SQLALCHEMY_DATABASE_URI
           value: "mysql://root:nycu_is_good@mysql:3306/document_system"
-
       - name: email-notification-system
         image: document-system-email-notification-system:0.0.1
-
-      # - name: frontend
-      #   image: document-system-frontend:0.0.1
-      #   volumeMounts:
-      #   - name: frontend
-      #     mountPath: /app
-
-      volumes:
-      # - name: frontend-dist
-      #   hostPath:
-      #     path: /path/on/host/frontend/dist
-      # - name: frontend
-      #   hostPath:
-      #     path: /path/on/host/frontend
-      - name: system
-        hostPath:
-          path: system
