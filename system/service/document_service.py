@@ -110,12 +110,12 @@ class DocumentService:
             document = self.document_repo.get_document_by_uid(document_uid)
             mode = self.document_repo.get_document_mode(user, document)
             document_comments = self.document_repo.get_document_comment_by_document_id(document.id)
-            current_app.logger.info(f"Get {len(document_comments)} comments of document (uid: {uid})")
+            current_app.logger.info(f"Get {len(document_comments)} comments of document (uid: {document_uid})")
             if document.lock_session is not "" and document.lock_session is not None:
                 if document.lock_session != session.get("lock_session"):
                     lock_session = datetime.strptime(document.lock_session, "%Y-%m-%d %H:%M:%S")
                     if lock_session + timedelta(minutes=5) > datetime.now() :
-                        current_app.logger.info(f"Document Ud: {uid} is locked by other user.")
+                        current_app.logger.info(f"Document Ud: {document_uid} is locked by other user.")
                         return {
                             "state": "session is locked by other user."
                         }
@@ -139,7 +139,7 @@ class DocumentService:
                     for comment in document_comments
                 ]
             }
-        current_app.logger.info(f"Can't find document by uid: {uid}")
+        current_app.logger.info(f"Can't find document by uid: {document_uid}")
         return {"state": "Cant find document by uid"}
 
     def delete_lock_session_by_uid(self, uid: str):

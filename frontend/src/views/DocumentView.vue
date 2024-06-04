@@ -222,7 +222,7 @@ export default {
           // toolbar: '#custom-toolbar',
         },
       },
-      otherIsEditing: false,
+      otherIsEditting: false,
       permissionHeaders: [
         { title: 'Name', key: 'name' },
         { title: 'Username', key: 'username' },
@@ -254,7 +254,7 @@ export default {
       .then(response => {
         this.name = response.data.name;
         this.content = response.data.body;
-        this.otherIsEditing = response.data.otherIsEditing;
+        this.otherIsEditting = response.data.otherIsEditting;
         this.mode = response.data.mode;
         this.isDocumentLoaded = true;
       })
