@@ -9,4 +9,4 @@ COPY system .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD sleep 10; python -m controller.app
+CMD sleep 15; python -m controller.app
