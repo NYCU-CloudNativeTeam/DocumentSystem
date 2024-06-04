@@ -50,7 +50,7 @@ def create_document(name, owner_id, document_status_id):
             -d '{
                 "name": "Project Proposal",
                 "owner_id": 1,
-                "document_status_id": 2
+                "document_status_id": 1
             }'
             ```
 
@@ -118,8 +118,50 @@ def get_document(uid):
             ```
     """
     document = document_service.get_document(uid)
-    return jsonify(document)
+    if 'state' in document:
+        if document['state'] == 'session is locked by other user.':
+            return jsonify({"error": "session is locked by other user"}), 400
+        return jsonify({"error": "Can't find document by uid"}), 404
+    else:
+        return jsonify(document), 200
 
+@documents.route('/<string:document_uid>/lock-session', methods=['DELETE'], strict_slashes=False)
+def delete_document_lock_session(document_uid):
+    """
+    Delete lock_session by (UID).
+
+    Args:
+        uid (str): The unique identifier of the document to be deleted.
+
+    Returns:
+        JSON response indicating whether the deletion was successful or failed.
+
+    Example:
+        Use the following curl command to delete a document by UID:
+            ```bash
+            curl -i -X DELETE http://localhost:5000/documents/doc1/lock-session
+            ```
+    """
+    data = document_service.delete_lock_session_by_uid(document_uid)
+    if data['state'] == 'true':
+        return jsonify(data), 200
+    else:
+        return jsonify(data), 400
+
+@documents.route('/<string:document_uid>/lock-session', methods=['PUT'])
+def update_document_lock_session(document_uid):
+    """
+    Example:
+        curl -X PUT http://localhost:5000/documents/doc1/lock-session \
+             -H "Content-Type: application/json" \
+            -d '{}'
+    """
+    data = document_service.update_lock_session_by_uid(document_uid)
+    if data['state'] == 'true':
+        return jsonify(data), 200
+    else:
+        return jsonify(data), 400
+    
 @documents.route('/<string:document_uid>/audit-result', methods=['GET'])
 def get_audit_result(document_uid):
     """

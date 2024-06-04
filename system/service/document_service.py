@@ -6,6 +6,7 @@ from repo.document_repo import DocumentRepository
 from repo.user_repo import UserRepository
 from repo.audit_repo import AuditRepository
 from service.notification_service import NotificationService
+from datetime import datetime, timedelta
 
 class DocumentService:
     def __init__(self):
@@ -57,7 +58,8 @@ class DocumentService:
             uid=str(uuid4()),
             name=name,
             owner_id=owner_id,
-            document_status_id=document_status_id
+            document_status_id=document_status_id,
+            lock_session=""
         )
         new_doc = self.document_repo.create_document(document)
         return new_doc.uid
@@ -98,6 +100,15 @@ class DocumentService:
         if document:
             document_comments = self.document_repo.get_document_comment_by_document_id(document.id)
             current_app.logger.info(f"Get {len(document_comments)} comments of document (uid: {uid})")
+            if document.lock_session is not "" and document.lock_session is not None:
+                lock_session = datetime.strptime(document.lock_session, "%Y-%m-%d %H:%M:%S")
+                if lock_session + timedelta(minutes=5) > datetime.now() :
+                    current_app.logger.info(f"Document Ud: {uid} is locked by other user.")
+                    return {
+                        "state": "session is locked by other user."
+                    }
+            document.lock_session = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.document_repo.update_document(document)
             return {
                 "uid": document.uid,
                 "name": document.name,
@@ -115,9 +126,25 @@ class DocumentService:
                     for comment in document_comments
                 ]
             }
-        current_app.logger.info(f"Get NO document by uid: {uid}")
-        return None
+        current_app.logger.info(f"Can't find document by uid: {uid}")
+        return {"state": "Cant find document by uid"}
 
+    def delete_lock_session_by_uid(self, uid: str):
+        document = self.document_repo.get_document_by_uid(uid)
+        if document:
+            document.lock_session = ""
+            self.document_repo.update_document(document)
+            return {"state": "true"}
+        return {"state": "false"}
+    
+    def update_lock_session_by_uid(self, uid: str):
+        document = self.document_repo.get_document_by_uid(uid)
+        if document:
+            document.lock_session = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.document_repo.update_document(document)
+            return {"state": "true", "lock_session": document.lock_session}
+        return {"state": "false"}
+    
     def delete_document_by_uid(self, document_uid: str):
         """Delete a document from the database identified by its unique identifier (UID).
 
