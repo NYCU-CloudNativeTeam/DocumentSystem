@@ -16,6 +16,6 @@ export default defineConfig({
     }
   },
   server: {
-    host: 'frontend',
+    host: '0.0.0.0'
   }
 })
