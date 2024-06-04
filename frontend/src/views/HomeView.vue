@@ -3,7 +3,7 @@
 <template>
   <v-main>
     <v-app-bar height="75">
-      <v-btn class="ml-4">NEW DOCUMENT</v-btn>
+      <v-btn class="ml-4" @click="createNewDocument">NEW DOCUMENT</v-btn>
       <!--
       <v-spacer></v-spacer>
       <v-select
@@ -19,23 +19,25 @@
     </v-app-bar>
     <v-row class="d-flex justify-center">
       <v-card
-        class="ma-3 pa-2 d-flex flex-column"
+        class="ma-3 pa-2 d-flex flex-column document-card"
         v-for="document in documents"
         :key="document.uid"
         width="250"
         min-height="380"
-        @click="console.log('hi')"
+        @click="this.$router.push(`/documents/${document.uid}`)"
       >
         <v-card-title>
           <p class="text-h5 text--primary text-truncate">{{ document.name }}</p>
         </v-card-title>
-        <v-card-text> </v-card-text>
+        <v-card-text>
+          <QuillEditor contentType="html" v-model:content="document.body" :readOnly="true" toolbar="#custom-toolbar"></QuillEditor>
+          <div id="custom-toolbar"></div>
+        </v-card-text>
         <v-card-actions>
-          <v-btn color="secondary" v-if="document.status == 3">REMIND AGAIN</v-btn>
+          <!-- <v-btn color="secondary" v-if="document.status == 3">REMIND AGAIN</v-btn> -->
           <v-spacer></v-spacer>
-          <v-icon v-if="document.status == 1">mdi-pencil-outline</v-icon>
-          <v-icon v-if="document.status == 2">mdi-eye-outline</v-icon>
-          <v-icon v-if="document.status == 3">mdi-account-arrow-right-outline</v-icon>
+          <v-icon v-if="document.status == 1">mdi-eye-outline</v-icon>
+          <v-icon v-if="document.status == 2">mdi-pencil-outline</v-icon>
         </v-card-actions>
       </v-card>
     </v-row>
@@ -43,43 +45,33 @@
 </template>
 
 <script lang="ts">
+import axios from 'axios';
+import { QuillEditor } from '@vueup/vue-quill'
+
 export default {
   data() {
     return {
       sort: null,
       sortOptions: ['Newest', 'Oldest', 'Popular'],
-      documents: [
-        {
-          uid: '1',
-          name: 'Document 1',
-          status: 1,
-          reveal: false
-        },
-        {
-          uid: '2',
-          name: 'Document 2222222',
-          status: 2,
-          reveal: false
-        },
-        {
-          uid: '3',
-          name: 'Document 333333333333',
-          status: 3,
-          reveal: false
-        },
-        {
-          uid: '4',
-          name: 'Document 44',
-          status: 2,
-          reveal: false
-        },
-        {
-          uid: '5',
-          name: 'Document 55',
-          status: 2,
-          reveal: false
-        }
-      ]
+      documents: [],
+    }
+  },
+  components: {
+    QuillEditor
+  },
+  mounted() {
+    axios.get('/api/v1/documents').then((response) => {
+      this.documents = response.data['documents'];
+      // for (let i = 0; i < this.documents.length; i++) {
+      //   this.documents[i].reveal = false;
+      // }
+    });
+  },
+  methods: {
+    createNewDocument() {
+      axios.post('/api/v1/documents').then((response) => {
+        this.$router.push(`/documents/${response.data['documentUid']}`);
+      });
     }
   }
 }

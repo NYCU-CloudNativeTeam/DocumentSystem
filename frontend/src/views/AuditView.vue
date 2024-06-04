@@ -3,47 +3,55 @@
     <div>
       <v-data-table
         :headers="headers"
-        :items="employees"
+        :items="audits"
         class="elevation-1"
-      ></v-data-table>
+        :loading="audits.length == 0"
+      >
+      <template #item.link="{ item }">
+        <v-btn :to="'/documents/' + item.documentUid" color="secondary">VIEW</v-btn>
+      </template>
+      <template #item.status="{ item }">
+        <v-chip
+          :color="item.status == 1 ? 'success' : item.status == 3 ? 'warning' : 'error'"
+          dark
+        >
+          {{ item.status == 1 ? 'Approved' : item.status == 3 ? 'Pending' : 'Rejected' }}
+          <v-icon class="ml-2" v-if="item.status == 1">mdi-check-decagram</v-icon>
+          <v-icon class="ml-2" v-if="item.status == 2">mdi-cancel</v-icon>
+          <v-icon class="ml-2" v-if="item.status == 3">mdi-account-clock</v-icon>
+        </v-chip>
+      </template>
+      </v-data-table>
     </div>
   </v-main>
 </template>
-  
+
 <script lang="ts">
-  export default {
-    data () {
-      return {
-        headers: [
-          {
-            title: 'Title',
-            // align: 'start',
-            // sortable: true,
-            key: 'title',
-          },
-          { title: 'Name', key: 'name' },
-          { title: 'Submission Date', key: 'submissiondate' },
-          { title: 'Audit Date', key: 'auditdate' },
-          { title: 'View', key: 'link' },
-          { title: 'Status', key: 'status' },
-        ],
-        employees: [
-          { title: 'Document1', name: "Sherry Lee", submissiondate: '0000-00-00', auditdate: '0000-00-00', link: 'google.com',  status: 'Active'},
-          { title: 'Document2', name: "Ross Geller", submissiondate: '0000-00-00', auditdate: '0000-00-00' , link: '', status: 'Active'},
-          { title: 'Document3', name: "Rachel Green", submissiondate: '0000-00-00',  auditdate: '0000-00-00', link: '',  status: 'Active'},
-          { title: 'Document4', name: "Rachel Green", submissiondate: '0000-00-00',  auditdate: '0000-00-00', link: '',  status: 'Active'},
-          { title: 'Document5', name: "Joey Tribbiani", submissiondate: '0000-00-00',  auditdate: '0000-00-00' , link: '',  status: 'Active'},
-          { title: 'Document6', name: "Phoebe Buffay", submissiondate: '0000-00-00', auditdate: '0000-00-00' , link: '', status: 'Active'},
-          { title: 'Document7', name: "Chandler Bing", submissiondate: '0000-00-00', auditdate: '0000-00-00' , link: '', status: 'Active'},
-          { title: 'Document8', name: "Ross Geller", submissiondate: '0000-00-00', auditdate: '0000-00-00' , link: '', status: 'Active'},
-          { title: 'Document9', name: "Rachel Green", submissiondate: '0000-00-00',  auditdate: '0000-00-00', link: '',  status: 'Active'},
-          { title: 'Document10', name: "Monica Geller", submissiondate: '0000-00-00',  auditdate: '0000-00-00' , link: '',  status: 'Active'},
-          { title: 'Document11', name: "Joey Tribbiani", submissiondate: '0000-00-00', auditdate: '0000-00-00' , link: '',  status: 'Active'},
-          { title: 'Document12', name: "Phoebe Buffay", submissiondate: '0000-00-00',  auditdate: '0000-00-00' , link: '', status: 'Active'}
-        ],
-      }
-    },
-  }
+import axios from 'axios';
+
+export default {
+  data () {
+    return {
+      headers: [
+        { title: 'Name', key: 'name' },
+        { title: 'Auditor', key: 'auditor' },
+        { title: 'Submission Date', key: 'auditCreatedTime' },
+        { title: 'Audit Date', key: 'auditedTime' },
+        { title: 'View', key: 'link' },
+        { title: 'Status', key: 'status' },
+      ],
+      audits: [
+        // { name: 'Document1', auditor: "Sherry Lee", auditedTime: '0000-00-00', auditCreatedTime: '0000-00-00', link: '/documents/123',  status: 1},
+      ],
+    }
+  },
+  mounted() {
+    axios.get('/api/v1/audits')
+      .then(response => {
+        this.audits = response.data.documents;
+      })
+  },
+}
 </script>
 
 <style>

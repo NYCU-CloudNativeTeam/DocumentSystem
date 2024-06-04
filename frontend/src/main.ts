@@ -1,8 +1,12 @@
 import './assets/main.scss'
 import '@mdi/font/css/materialdesignicons.css'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import '@vueup/vue-quill/dist/vue-quill.bubble.css'
+import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+
 
 // Vuetify
 import 'vuetify/styles'

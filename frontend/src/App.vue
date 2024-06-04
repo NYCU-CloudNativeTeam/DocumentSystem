@@ -3,9 +3,17 @@ import { RouterView } from 'vue-router'
 import { useLinksStore } from '@/stores/links'
 import { useUserStore } from '@/stores/user'
 import { useTheme } from 'vuetify';
+import { useRouter, useRoute } from 'vue-router'
 
 const linksStore = useLinksStore()
 const userStore = useUserStore()
+const router = useRouter()
+
+userStore.fetchUser().then((result) => {
+  if (!result) {
+    router.push('/landing-page');
+  }
+})
 
 const theme = useTheme();
 
@@ -16,7 +24,7 @@ function toggleTheme() {
 
 <template>
   <v-app>
-    <v-navigation-drawer expand-on-hover rail permanent>
+    <v-navigation-drawer class="elevation-5" expand-on-hover rail permanent v-if="!isLandingPage"> <!--  v-if="!isDocumentPage" -->
       <template v-slot:prepend>
         <v-list>
           <v-list-item prepend-icon="mdi-book" @click="this.$router.push('/')">
@@ -40,12 +48,12 @@ function toggleTheme() {
         <v-list>
           <v-list-item
             :prepend-avatar="userStore.user.avatar"
-            :subtitle="userStore.user.email"
+            :subtitle="userStore.user.username"
             :title="userStore.user.name"
           >
           </v-list-item>
           <v-list-item prepend-icon="mdi-theme-light-dark" @click="toggleTheme" title="SWAP THEME"></v-list-item>
-          <v-list-item prepend-icon="mdi-logout" @click="console.log('logout')" title="LOGOUT">
+          <v-list-item prepend-icon="mdi-logout" href="/api/v1/sign-in/logout" title="LOGOUT">
           </v-list-item>
         </v-list>
       </template>
@@ -53,3 +61,21 @@ function toggleTheme() {
     <RouterView />
   </v-app>
 </template>
+
+<script lang="ts">
+export default {
+  data() {
+    return {}
+  },
+  computed: {
+    isDocumentPage() {
+      return this.$router.currentRoute.value.fullPath.includes('/documents/')
+    },
+    isLandingPage() {
+      return this.$router.currentRoute.value.fullPath.includes('/landing-page')
+    }
+  },
+  mounted() {
+  }
+}
+</script>

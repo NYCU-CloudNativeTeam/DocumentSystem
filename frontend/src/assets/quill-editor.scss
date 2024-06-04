@@ -1,0 +1,15 @@
+.quill-comment {
+  display: inline !important;
+}
+
+.quill-comment + p {
+  display: inline !important;
+}
+
+p:has( + .quill-comment) {
+  display: inline !important;
+}
+
+.document-card .ql-disabled > .ql-editor > * {
+  cursor: pointer;
+}

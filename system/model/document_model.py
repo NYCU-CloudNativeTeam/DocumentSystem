@@ -64,6 +64,8 @@ class DocumentPermission(db.Model):
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    document = db.relationship('Document', backref='permissions')
+
 class DocumentPermissionType(db.Model):
     __tablename__ = 'document_permission_type'
     id = db.Column(db.Integer, primary_key=True)

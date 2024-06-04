@@ -8,6 +8,7 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
     mail = db.Column(db.String(100), unique=True, nullable=False)
+    google_id = db.Column(db.String(100), unique=True, nullable=False)
     lock_session = db.Column(db.String(50), nullable=True)
     notification_flag = db.Column(db.Boolean, default=True)
     third_party_info = db.Column(db.String(255), nullable=True)

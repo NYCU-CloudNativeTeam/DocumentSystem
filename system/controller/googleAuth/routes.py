@@ -1,7 +1,9 @@
 from flask import Blueprint, redirect, jsonify, session, abort
 from service.GoogleAuthService import GoogleAuthService
+from service.user_service import UserService
 
 auth_service = GoogleAuthService()
+user_service = UserService()
 googleAuth = Blueprint('sign-in', __name__)
 
 def login_is_required(function):
@@ -39,16 +41,17 @@ def get_session_inf():
 	            "username": "albert123@gmail.com",
 	            "name": "Albert",
             }
-        
+
         Error response format:
             {
                 "result": "Session is empty"
             }
     """
     if 'google_id' in session:
-        return jsonify({"id": session['google_id'],
-         "username": session['email'], 
-         "name": session['name']}), 200
+        return jsonify({"id": user_service.get_user_by_google_id(session['google_id']).id,
+         "username": session['email'],
+         "avatar": session['picture'],
+         "name": session['name'],}), 200
     return jsonify({"result": "Session is empty"}), 404
 
 @googleAuth.route("/", methods=["GET"])
@@ -61,12 +64,17 @@ def callback():
     auth_service.fetch_token()
     auth_service.validate_state()
     auth_service.get_user_info()
-    return redirect("/sign-in/test_page_protected_area")
+    if not user_service.get_user_by_google_id(session['google_id']):
+        user_service.create_user(session['email'], session['name'], session['email'], session['google_id'], third_party_info=session['picture'])
+
+    session['id'] = user_service.get_user_by_google_id(session['google_id']).id
+
+    return redirect("/")
 
 @googleAuth.route("/logout")
 def logout():
     auth_service.clear_session()
-    return redirect("/sign-in/test_page")
+    return redirect("/landing-page")
 
 #Test use page(After logging in)
 @googleAuth.route("/test_page_protected_area")
