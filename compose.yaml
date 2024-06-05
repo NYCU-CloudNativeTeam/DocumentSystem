@@ -1,0 +1,87 @@
+version: '3'
+
+networks:
+  document_system_network:
+    driver: bridge
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: document-system-nginx:0.0.1
+    ports:
+      - "8080:8080"
+    hostname: document-system-nginx
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+      - ./frontend:/app
+    networks:
+      - document_system_network
+    depends_on:
+      - api
+      - frontend
+
+  mysql:
+    image: mysql:8.3
+    hostname: mysql
+    networks:
+      - document_system_network
+    environment:
+      MYSQL_ROOT_PASSWORD: nycu_is_good
+      MYSQL_DATABASE: document_system
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    # volumes:
+    #   - mysql_data:/var/lib/mysql
+
+  rabbitmq:
+    image: rabbitmq:3.13-alpine
+    ports:
+      - "5672:5672"
+    hostname: document-system-rabbitmq
+    networks:
+      - document_system_network
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+      args:
+        ENVIRONMENT: dev
+    image: document-system-api:0.0.1
+    volumes:
+      - ./system:/app
+    ports:
+      - "5000:5000"
+    hostname: document-system-api
+    networks:
+      - document_system_network
+    environment:
+      SQLALCHEMY_DATABASE_URI: mysql://root:nycu_is_good@mysql:3306/document_system
+      REDIRECT_URI: https://8475-36-226-195-102.ngrok-free.app/api/v1/sign-in/callback
+    depends_on:
+      - mysql
+
+  email_notification_system:
+    build:
+      context: .
+      dockerfile: docker/email_notification_system/Dockerfile
+      args:
+        ENVIRONMENT: dev
+    image: document-system-email-notification-system:0.0.1
+    hostname: document-system-email-notification-system
+    networks:
+      - document_system_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend/Dockerfile
+    image: document-system-frontend:0.0.1
+    hostname: document-system-frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Source: https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder/62799209#62799209
+    networks:
+      - document_system_network
