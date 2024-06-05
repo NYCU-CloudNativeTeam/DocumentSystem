@@ -52,11 +52,13 @@ def init_dummy(db):
     status1 = AuditStatus(name='Approved')
     status2 = AuditStatus(name='Rejected')
     status3 = AuditStatus(name='Pedding')
+    status4 = AuditStatus(name='Not Sent')
 
     for i in [
         status1,
         status2,
-        status3
+        status3,
+        status4
     ]:
         audit_repo.create_audit_status(i)
 

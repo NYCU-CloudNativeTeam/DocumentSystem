@@ -13,7 +13,7 @@ class AuditService:
         self.audit_repo = AuditRepository()
         self.user_repo = UserRepository()
 
-    def get_all_audits(self, sort: str) -> List[Dict]:
+    def get_all_audits(self, user_id: int, sort: str) -> List[Dict]:
         """Retrieve all audits with optional sorting.
 
         Args:
@@ -22,7 +22,7 @@ class AuditService:
         Returns:
             List[Dict]: A list of dictionaries containing audit details.
         """
-        audits = self.audit_repo.get_all_audits(sort)
+        audits = self.audit_repo.get_all_audits(user_id, sort)
         audits_list = [
             {
                 "auditUid": audit.uid,
@@ -55,15 +55,22 @@ class AuditService:
         document = self.document_repo.get_document_by_uid(document_uid)
         audit_status_id = 3  # Pending
         if auditor and document:
-            audit = Audit(
-                uid = str(uuid4()),
-                document_id = document.id,
-                auditor_id = auditor.id,
-                audit_status_id = audit_status_id
-            )
-            new_audit = self.audit_repo.create_audit(audit)
-            current_app.logger.info(f"New audits record {new_audit}")
-            return {"auditUid": new_audit.uid}
+            audit = self.audit_repo.get_audit_by_document_id(document.id)
+            if not audit:
+                audit = Audit(
+                    uid = str(uuid4()),
+                    document_id = document.id,
+                    auditor_id = auditor.id,
+                    audit_status_id = audit_status_id
+                )
+                new_audit = self.audit_repo.create_audit(audit)
+                current_app.logger.info(f"New audits record {new_audit}")
+            else:
+                audit.auditor_id = auditor.id,
+                audit.audit_status_id = audit_status_id
+                self.audit_repo.update_audit(audit)
+                current_app.logger.info(f"Update audits record {audit}")
+            return {"auditUid": audit.uid}
         return None
 
     def get_audit_result(self, document_uid: str) -> Optional[Dict]:

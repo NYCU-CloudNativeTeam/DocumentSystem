@@ -46,7 +46,7 @@ class DocumentService:
 
         def get_document_audit_status(doc):
             audit = self.audit_repo.get_audit_by_document_id(doc.id)
-            return audit.audit_status_id if audit else 0
+            return audit.audit_status_id if audit else 4
 
         try:
             user = self.user_repo.find_user_by_id(user_id)
@@ -102,7 +102,7 @@ class DocumentService:
 
             audit = self.audit_repo.get_audit_by_document_id(document.id)
             if audit:
-                audit.audit_status_id = 0
+                audit.audit_status_id = 4
                 self.audit_repo.update_audit(audit)
 
             if is_updated_succesfully == False:
@@ -120,7 +120,7 @@ class DocumentService:
             document = self.document_repo.get_document_by_uid(document_uid)
             mode = self.document_repo.get_document_mode(user, document)
             audit_status = self.audit_repo.get_audit_by_document_id(document.id)
-            audit_status_id = audit_status.audit_status_id if audit_status else 0
+            audit_status_id = audit_status.audit_status_id if audit_status else 4
             document_comments = self.document_repo.get_document_comment_by_document_id(document.id)
             otherIsEditting = False
             current_app.logger.info(f"Get {len(document_comments)} comments of document (uid: {document_uid})")

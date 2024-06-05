@@ -14,6 +14,8 @@ const permissions = ref([]);
 const router = useRouter();
 const saveDocumentButton = ref(null);
 const quillEditor = ref(null);
+const isRejectionEditting = ref(false);
+const rejectionInEditting = ref('');
 
 const props = defineProps({
   uid: String,
@@ -51,6 +53,25 @@ watch(selectedUser, (newValue) => {
   });
   selectedUser.value = null;
 });
+
+function closeRejectionEdittingDialogWithSaving() {
+  axios.post('/api/v1/documents/' + props.uid + '/audit-result', {
+    auditStatus: 2,
+    rejectedReason: rejectionInEditting.value,
+  }).then(response => {
+    console.log(response);
+    router.go();
+  }).catch(error => {
+    console.log(error);
+  });
+  isRejectionEditting.value = false;
+  rejectionInEditting.value = '';
+}
+
+function closeRejectionEdittingDialogWithoutSaving() {
+  isRejectionEditting.value = false;
+  rejectionInEditting.value = '';
+}
 
 function getPermissions() {
   isPermissionsLoading.value = true;
@@ -98,6 +119,7 @@ function approveAudit() {
 }
 
 function rejectAudit() {
+  isRejectionEditting.value = true;
 }
 
 function sendAuditRequest() {
@@ -146,8 +168,8 @@ function changePermission(item, event) {
           density="compact"
           icon="mdi-pencil"
           @click="openNameEdittingDialog"
-          v-if="canEdit"
-        ></v-btn>
+          v-if="mode === 2 && auditStatus !== 3"
+          ></v-btn>
       </v-app-bar-title>
       <v-spacer></v-spacer>
       <v-sheet class="border pa-3 mr-3" rounded>
@@ -157,16 +179,16 @@ function changePermission(item, event) {
           :color="auditStatusChipColor"
         >
           {{ auditStatusChipText }}
-          <v-icon class="ml-2" v-if="auditStatus == 0">mdi-file</v-icon>
           <v-icon class="ml-2" v-if="auditStatus == 1">mdi-check-decagram</v-icon>
           <v-icon class="ml-2" v-if="auditStatus == 2">mdi-cancel</v-icon>
           <v-icon class="ml-2" v-if="auditStatus == 3">mdi-account-clock</v-icon>
+          <v-icon class="ml-2" v-if="auditStatus == 4">mdi-file</v-icon>
         </v-chip>
-        <v-btn class="ml-2" color="primary" @click="openAuditingDialog" append-icon="mdi-send" v-if="canEdit">AUDIT</v-btn>
+        <v-btn class="ml-2" color="primary" @click="openAuditingDialog" append-icon="mdi-send" v-if="canEdit && auditStatus === 4">AUDIT</v-btn>
         <v-btn class="ml-2" color="primary" @click="approveAudit" v-if="canAudit" append-icon="mdi-hand-okay">APPROVE</v-btn>
-        <v-btn class="ml-2" color="error" @click="approveAudit" v-if="canAudit" append-icon="mdi-close-thick">REJECT</v-btn>
+        <v-btn class="ml-2" color="error" @click="rejectAudit" v-if="canAudit" append-icon="mdi-close-thick">REJECT</v-btn>
       </v-sheet>
-      <v-btn color="secondary" @click="openPermissionsEdittingDialog" v-if="canEdit" append-icon="mdi-account">PERMISSION</v-btn>
+      <v-btn color="secondary" @click="openPermissionsEdittingDialog" v-if="mode === 2" append-icon="mdi-account">PERMISSION</v-btn>
       <v-btn ref="saveDocumentButton" color="primary" @click="saveDocument" v-if="canEdit" append-icon="mdi-content-save">SAVE</v-btn>
     </v-app-bar>
     <div class="document">
@@ -208,6 +230,21 @@ function changePermission(item, event) {
           <v-spacer></v-spacer>
           <v-btn text color="primary" @click="closeNameEdittingDialogWithSaving">OK</v-btn>
           <v-btn text color="secondary" @click="closeNameEdittingDialogWithoutSaving">CANCEL</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="isRejectionEditting" width="30%">
+      <v-card>
+        <v-card-title class="text-h6">
+          Rejected Reason
+        </v-card-title>
+        <v-card-text>
+          <v-text-field v-model="rejectionInEditting" outlined></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text color="primary" @click="closeRejectionEdittingDialogWithSaving">OK</v-btn>
+          <v-btn text color="secondary" @click="closeRejectionEdittingDialogWithoutSaving">CANCEL</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -396,8 +433,8 @@ export default {
     },
     auditStatus: {
       handler: function(newValue) {
-        this.auditStatusChipText = newValue === 0 ? 'Not Sent' : newValue === 1 ? 'Approved' : newValue === 2 ? 'Rejected' : 'Pending';
-        this.auditStatusChipColor = newValue === 0 ? 'grey' : newValue === 1 ? 'success' : newValue === 2 ? 'error' : 'warning';
+        this.auditStatusChipText = newValue === 4 ? 'Not Sent' : newValue === 1 ? 'Approved' : newValue === 2 ? 'Rejected' : 'Pending';
+        this.auditStatusChipColor = newValue === 4 ? 'grey' : newValue === 1 ? 'success' : newValue === 2 ? 'error' : 'warning';
         this.canEdit = this.auditStatus !== 3 && this.mode === 2;
         this.canAudit = this.auditStatus === 3 && this.mode === 3;
       },
@@ -594,18 +631,27 @@ export default {
     // },
     saveDocument() {
       if (this.auditStatus === 1 || this.auditStatus === 2) {
-        if (!confirm('Do you want to save the document? The audit will be rolled back to the "Not Sent" status.')) {
-          return;
+        if (confirm('Do you want to save the document? The audit will be rolled back to the "Not Sent" status.')) {
+          axios.put('/api/v1/documents/' + this.uid, {
+            body: this.$refs.quillEditor.getHTML(),
+            comments: [],
+          }).then(response => {
+            console.log(response);
+            this.$router.go();
+          }).catch(error => {
+            console.log(error);
+          });
         }
+      } else {
+        axios.put('/api/v1/documents/' + this.uid, {
+          body: this.$refs.quillEditor.getHTML(),
+          comments: [],
+        }).then(response => {
+          console.log(response);
+        }).catch(error => {
+          console.log(error);
+        });
       }
-      axios.put('/api/v1/documents/' + this.uid, {
-        body: this.$refs.quillEditor.getHTML(),
-        comments: [],
-      }).then(response => {
-        console.log(response);
-      }).catch(error => {
-        console.log(error);
-      });
     },
   }
 };
