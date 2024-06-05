@@ -59,6 +59,7 @@ services:
       - document_system_network
     environment:
       SQLALCHEMY_DATABASE_URI: mysql://root:nycu_is_good@mysql:3306/document_system
+      REDIRECT_URI: https://8475-36-226-195-102.ngrok-free.app/api/v1/sign-in/callback
     depends_on:
       - mysql
 

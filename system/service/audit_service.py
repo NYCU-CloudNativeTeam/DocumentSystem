@@ -52,20 +52,14 @@ class AuditService:
             Optional[Dict]: A dictionary containing the new audit's UID if creation is successful, otherwise None.
         """
         auditor = self.user_repo.find_user_by_username(auditor_username)
-        if auditor:
-            audit_status = AuditStatus(
-                name = auditor_username,
-                # possible values: "approved(1)", "rejected(2)", "pending(3)"
-                # default is pending
-                audit_status_value = 3
-            )
-            new_audit_status = self.audit_repo.create_audit_status(audit_status)
-            current_app.logger.info(f"New audits status record {new_audit_status}")
+        document = self.document_repo.get_document_by_uid(document_uid)
+        audit_status_id = 3  # Pending
+        if auditor and document:
             audit = Audit(
                 uid = str(uuid4()),
-                document_id = document_uid,
+                document_id = document.id,
                 auditor_id = auditor.id,
-                audit_status_id = audit_status.id
+                audit_status_id = audit_status_id
             )
             new_audit = self.audit_repo.create_audit(audit)
             current_app.logger.info(f"New audits record {new_audit}")
@@ -104,15 +98,15 @@ class AuditService:
             if audit:
                 audit_status = self.audit_repo.get_audit_status_by_audit_status_id(audit.audit_status_id)
                 if audit_status:
-                    audit_status_value = audit_status.audit_status_value
-                    current_app.logger.info(f"audit_result is {audit_status_value}")
+                    audit_status_id = audit_status.audit_status_id
+                    current_app.logger.info(f"audit_result is {audit_status_id}")
                     # possible values 1 means approved
-                    if audit_status_value == 1:
+                    if audit_status_id == 1:
                         auditor = self.user_repo.find_user_by_id(audit.auditor_id)
                         audit_result = {
                             'auditUid': audit.uid,
                             'documentUid': document_uid,
-                            'auditStatus': audit_status.audit_status_value,
+                            'auditStatus': audit_status.audit_status_id,
                             'auditor': {
                                 "userId": auditor.id,
                                 "username": auditor.username,
@@ -121,12 +115,12 @@ class AuditService:
                             'auditedTime': audit_status.updated_date.isoformat() + 'Z'
                         }
                     # 2 means rejected
-                    elif audit_status_value == 2:
+                    elif audit_status_id == 2:
                         auditor = self.user_repo.find_user_by_id(audit.auditor_id)
                         audit_result = {
                             'auditUid': audit.uid,
                             'documentUid': document_uid,
-                            'auditStatus': audit_status.audit_status_value,
+                            'auditStatus': audit_status.audit_status_id,
                             'rejectedReason': audit.rejected_reason,
                             'auditor': {
                                 "userId": auditor.id,
@@ -136,12 +130,12 @@ class AuditService:
                             'auditedTime': audit_status.updated_date.isoformat() + 'Z'
                         }
                     # 3 means pending
-                    elif audit_status_value == 3:
+                    elif audit_status_id == 3:
                         auditor = self.user_repo.find_user_by_id(audit.auditor_id)
                         audit_result = {
                             'auditUid': audit.uid,
                             'documentUid': document_uid,
-                            'auditStatus': audit_status.audit_status_value,
+                            'auditStatus': audit_status.audit_status_id,
                             'auditor': {
                                 "userId": auditor.id,
                                 "username": auditor.username,
@@ -198,32 +192,18 @@ class AuditService:
             audit = self.audit_repo.get_audit_by_document_id(document_id)
 
             if audit:
-                # if document exist, get document audit status currently
-                origion_audit_status = self.audit_repo.get_audit_status_by_audit_status_id(audit.audit_status_id)
-                if origion_audit_status:
-                    # possible values: "approved(1)", "rejected(2)", "pending(3)"
-                    # get current audit status value
-                    origion_audit_status_value = origion_audit_status.audit_status_value
-
-                    # if document still pending, update to new audit status
-                    if origion_audit_status_value == 3:
-                        # update reject reason for document in audit table
-                        audit.rejected_reason = rejected_reason
-                        self.audit_repo.update_audit(audit)
-                        current_app.logger.info(f"Update reject reason: {rejected_reason} for document UID {document_uid}")
-
-                        # update audit status value for audit status UID
-                        origion_audit_status.audit_status_value = audit_status
-                        audit_status_id = origion_audit_status.id
-                        self.audit_repo.update_audit_status(origion_audit_status)
-                        current_app.logger.info(f"Update audit_status_value to {audit_status} for audit status ID {audit_status_id} .")
-                        return True
-                    else:
-                        current_app.logger.info(f"audit_status_value is {origion_audit_status_value}, {document_uid} had been auditted.")
-                        return False
+                # possible values: "approved(1)", "rejected(2)", "pending(3)"
+                # if document still pending, update to new audit status
+                if audit.audit_status_id == 3:
+                    # update reject reason for document in audit table
+                    audit.audit_status_id = audit_status
+                    audit.rejected_reason = rejected_reason
+                    self.audit_repo.update_audit(audit)
+                    current_app.logger.info(f"Update reject reason: {rejected_reason} for document UID {document_uid}")
+                    return True
                 else:
-                    current_app.logger.info(f"Cannot get audit_status by audit_status_id {audit.audit_status_id}")
-                    return None
+                    current_app.logger.info(f"audit_status_id is {audit.id}, {document_uid} had been auditted.")
+                    return False
             else:
                 # cannot find document by UID
                 current_app.logger.info(f"Cannot get audit by document_uid {document_uid}")

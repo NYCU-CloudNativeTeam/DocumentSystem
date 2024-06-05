@@ -27,12 +27,11 @@ class Audit(db.Model):
         }
 
     auditor = db.relationship('User', backref='audits')
-    document = db.relationship('Document', backref='audits')
+    document = db.relationship('Document', backref='audit')
 
 class AuditStatus(db.Model):
     __tablename__ = 'audit_status'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    audit_status_value = db.Column(db.Integer)
     created_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -27,6 +27,10 @@ from repo.audit_repo import AuditRepository
 from repo.user_repo import UserRepository
 from repo.document_repo import DocumentRepository
 
+from flask_admin.contrib.sqla import ModelView
+from model.user_model import User
+from model.base_model import db
+
 def init_dummy(db):
     user_repo = UserRepository()
     audit_repo = AuditRepository()
@@ -45,9 +49,9 @@ def init_dummy(db):
         user_repo.add_user(i)
 
     # Create dummy audit statuses
-    status1 = AuditStatus(name='Approved', audit_status_value=1)
-    status2 = AuditStatus(name='Rejected', audit_status_value=2)
-    status3 = AuditStatus(name='Pedding', audit_status_value=3)
+    status1 = AuditStatus(name='Approved')
+    status2 = AuditStatus(name='Rejected')
+    status3 = AuditStatus(name='Pedding')
 
     for i in [
         status1,
@@ -176,6 +180,7 @@ def create_app():
 
     # import admin and register
     admin = Admin(app, url="/admin", name='microblog', template_mode='bootstrap3')
+    admin.add_view(ModelView(User, db.session))
 
     return app
 

@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
+import { useRouter } from 'vue-router'
 
 const searchedUsers = ref([]);
 const searchLoading = ref(false);
 const selectedUser = ref(null);
+const selectedAuditor = ref(null);
 const isPermissionsEditting = ref(false);
 const isPermissionsLoading = ref(false);
+const isAuditing = ref(false);
 const permissions = ref([]);
+const router = useRouter();
+const saveDocumentButton = ref(null);
+const quillEditor = ref(null);
 
 const props = defineProps({
   uid: String,
@@ -15,7 +21,6 @@ const props = defineProps({
 
 const searchUsers = useDebounceFn((input) => {
   if (input.length == 0) {
-    searchedUsers.value = [];
     return;
   }
   searchLoading.value = true;
@@ -29,7 +34,7 @@ const searchUsers = useDebounceFn((input) => {
     searchLoading.value = false;
   }).catch(error => {
     console.log(error);
-  })}, 500);
+  })}, 200);
 
 watch(selectedUser, (newValue) => {
   if (!newValue) {
@@ -72,6 +77,51 @@ function closePermissionsEdittingDialog() {
   isPermissionsEditting.value = false;
 }
 
+function openAuditingDialog() {
+  isAuditing.value = true;
+}
+
+function closeAuditingDialog() {
+  isAuditing.value = false;
+}
+
+function approveAudit() {
+  axios.post('/api/v1/documents/' + props.uid + '/audit-result', {
+    auditStatus: 1,
+    rejectedReason: '',
+  }).then(response => {
+    console.log(response);
+    router.go();
+  }).catch(error => {
+    console.log(error);
+  });
+}
+
+function rejectAudit() {
+}
+
+function sendAuditRequest() {
+  axios.put('/api/v1/documents/' + props.uid, {
+    body: quillEditor.value.getHTML(),
+    comments: [],
+  }).then(response => {
+    console.log(response);
+    axios.post('/api/v1/audits', {
+      documentUid: props.uid,
+      auditorUsername: selectedAuditor.value,
+    }).then(response => {
+      console.log(response);
+      router.go();
+    }).catch(error => {
+      console.log(error);
+    });
+    isAuditing.value = false;
+    selectedAuditor.value = null;
+  }).catch(error => {
+    console.log(error);
+  });
+}
+
 function changePermission(item, event) {
   axios.put('/api/v1/documents/' + props.uid + '/permissions', {
     username: item.username,
@@ -96,13 +146,28 @@ function changePermission(item, event) {
           density="compact"
           icon="mdi-pencil"
           @click="openNameEdittingDialog"
-          v-if="mode === 2"
+          v-if="canEdit"
         ></v-btn>
       </v-app-bar-title>
       <v-spacer></v-spacer>
-      <v-btn color="secondary" @click="openPermissionsEdittingDialog" v-if="mode === 2">PERMISSION</v-btn>
-      <v-btn color="primary" @click="saveDocument" v-if="mode === 2">SAVE</v-btn>
-      <v-btn color="primary" v-if="mode === 2">AUDIT</v-btn>
+      <v-sheet class="border pa-3 mr-3" rounded>
+        <span>Audit Status:</span>
+        <v-chip
+          class="ml-2"
+          :color="auditStatusChipColor"
+        >
+          {{ auditStatusChipText }}
+          <v-icon class="ml-2" v-if="auditStatus == 0">mdi-file</v-icon>
+          <v-icon class="ml-2" v-if="auditStatus == 1">mdi-check-decagram</v-icon>
+          <v-icon class="ml-2" v-if="auditStatus == 2">mdi-cancel</v-icon>
+          <v-icon class="ml-2" v-if="auditStatus == 3">mdi-account-clock</v-icon>
+        </v-chip>
+        <v-btn class="ml-2" color="primary" @click="openAuditingDialog" append-icon="mdi-send" v-if="canEdit">AUDIT</v-btn>
+        <v-btn class="ml-2" color="primary" @click="approveAudit" v-if="canAudit" append-icon="mdi-hand-okay">APPROVE</v-btn>
+        <v-btn class="ml-2" color="error" @click="approveAudit" v-if="canAudit" append-icon="mdi-close-thick">REJECT</v-btn>
+      </v-sheet>
+      <v-btn color="secondary" @click="openPermissionsEdittingDialog" v-if="canEdit" append-icon="mdi-account">PERMISSION</v-btn>
+      <v-btn ref="saveDocumentButton" color="primary" @click="saveDocument" v-if="canEdit" append-icon="mdi-content-save">SAVE</v-btn>
     </v-app-bar>
     <div class="document">
       <QuillEditor
@@ -112,7 +177,7 @@ function changePermission(item, event) {
         @contextmenu="onContextMenu"
         @selectionChange="onSelectionChange"
         @textChange="onTextChange"
-        :toolbar="mode === 2 ? 'full' : '#no-toolbar'"
+        :toolbar="canEdit ? 'full' : '#no-toolbar'"
         ref="quillEditor"
         :readOnly="mode !== 2"
         v-if="isDocumentLoaded"
@@ -156,7 +221,7 @@ function changePermission(item, event) {
             v-model="selectedUser"
             :items="searchedUsers"
             :loading="searchLoading"
-            prepent-inner-icon="mdi-magnify"
+            prepend-inner-icon="mdi-magnify"
             menu-icon=""
             density="comfortable"
             placeholder="Search user"
@@ -201,6 +266,51 @@ function changePermission(item, event) {
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="isAuditing" width="50%">
+      <v-card>
+        <v-card-title class="text-h6">
+          Audit
+        </v-card-title>
+        <v-card-text>
+          <v-autocomplete
+            v-model="selectedAuditor"
+            :items="searchedUsers"
+            :loading="searchLoading"
+            prepend-inner-icon="mdi-magnify"
+            menu-icon=""
+            density="comfortable"
+            placeholder="Search user"
+            item-props
+            item-title="username"
+            item-value="username"
+            @update:search="searchUsers"
+            chips
+          >
+          <template v-slot:chip="{ props, item }">
+            <v-chip
+              v-bind="props"
+              color="primary"
+              :text="item.raw.username"
+              :prepend-avatar="item.raw.profilePictureUrl"
+            ></v-chip>
+          </template>
+          <template v-slot:item="{ props, item }">
+            <v-list-item
+              v-bind="props"
+              :prepend-avatar="item.raw.profilePictureUrl"
+              :title="item.raw.name"
+              :subtitle="item.raw.username"
+            ></v-list-item>
+          </template>
+          </v-autocomplete>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text color="priamry" @click="sendAuditRequest">SEND</v-btn>
+          <v-btn text color="secondary" @click="closeAuditingDialog">CLOSE</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-main>
 </template>
 
@@ -230,6 +340,11 @@ export default {
       ],
       mode: 1,
       isDocumentLoaded: false,
+      auditStatus: 1,
+      auditStatusChipText: '',
+      auditStatusChipColor: '',
+      canEdit: false,
+      canAudit: false,
       // selectedRange: null,
       commentId: 0,
     }
@@ -250,17 +365,7 @@ export default {
         console.log(error);
       });
     });
-    axios.get('/api/v1/documents/' + this.uid)
-      .then(response => {
-        this.name = response.data.name;
-        this.content = response.data.body;
-        this.otherIsEditting = response.data.otherIsEditting;
-        this.mode = response.data.mode;
-        this.isDocumentLoaded = true;
-      })
-      .catch(error => {
-        console.log(error);
-      });
+    this.loadDocument();
   },
   unmounted() {
     window.removeEventListener('beforeunload', (event) => {
@@ -281,7 +386,39 @@ export default {
       console.log(error);
     });
   },
+  watch: {
+    mode: {
+      handler: function(newValue) {
+        this.canEdit = this.auditStatus !== 3 && this.mode === 2;
+        this.canAudit = this.auditStatus === 3 && this.mode === 3;
+      },
+      immediate: true,
+    },
+    auditStatus: {
+      handler: function(newValue) {
+        this.auditStatusChipText = newValue === 0 ? 'Not Sent' : newValue === 1 ? 'Approved' : newValue === 2 ? 'Rejected' : 'Pending';
+        this.auditStatusChipColor = newValue === 0 ? 'grey' : newValue === 1 ? 'success' : newValue === 2 ? 'error' : 'warning';
+        this.canEdit = this.auditStatus !== 3 && this.mode === 2;
+        this.canAudit = this.auditStatus === 3 && this.mode === 3;
+      },
+      immediate: true,
+    },
+  },
   methods: {
+    loadDocument() {
+      axios.get('/api/v1/documents/' + this.uid)
+        .then(response => {
+          this.name = response.data.name;
+          this.content = response.data.body;
+          this.otherIsEditting = response.data.otherIsEditting;
+          this.mode = response.data.mode;
+          this.isDocumentLoaded = true;
+          this.auditStatus = response.data.auditStatus;
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    },
     goBack() {
       this.$router.go(-1)
     },
@@ -456,6 +593,11 @@ export default {
     //   console.log(this.$refs.quillEditor.getHTML());
     // },
     saveDocument() {
+      if (this.auditStatus === 1 || this.auditStatus === 2) {
+        if (!confirm('Do you want to save the document? The audit will be rolled back to the "Not Sent" status.')) {
+          return;
+        }
+      }
       axios.put('/api/v1/documents/' + this.uid, {
         body: this.$refs.quillEditor.getHTML(),
         comments: [],
