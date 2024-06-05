@@ -6,6 +6,7 @@ from model.audit_model import Audit, AuditStatus
 from repo.document_repo import DocumentRepository
 from repo.audit_repo import AuditRepository
 from repo.user_repo import UserRepository
+from repo.email_repo import EmailRepo
 
 class AuditService:
     def __init__(self):
@@ -70,6 +71,12 @@ class AuditService:
                 audit.audit_status_id = audit_status_id
                 self.audit_repo.update_audit(audit)
                 current_app.logger.info(f"Update audits record {audit}")
+            if auditor.notification_flag:
+                recipient = auditor.mail
+                title = "You Have a New Audit Task!"
+                content = "You have been assigned a new audit task. Please log in to the system to complete the audit."
+                email_repo = EmailRepo()
+                email_repo.send(recipient, title, content)
             return {"auditUid": audit.uid}
         return None
 
