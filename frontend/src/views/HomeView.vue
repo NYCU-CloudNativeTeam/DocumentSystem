@@ -30,10 +30,20 @@
           <p class="text-h5 text--primary text-truncate">{{ document.name }}</p>
         </v-card-title>
         <v-card-text>
-          <QuillEditor contentType="html" v-model:content="document.body" :readOnly="true" toolbar="#custom-toolbar"></QuillEditor>
-          <div id="custom-toolbar"></div>
+          <QuillEditor contentType="html" v-model:content="document.body" :readOnly="true" toolbar="#invisible-toolbar" height="200px"></QuillEditor>
+          <div id="invisible-toolbar"></div>
         </v-card-text>
         <v-card-actions>
+          <v-chip
+            :color="document.auditStatusColor"
+            dark
+          >
+            {{ document.auditStatusText }}
+            <v-icon class="ml-2" v-if="document.auditStatus == 1">mdi-check-decagram</v-icon>
+            <v-icon class="ml-2" v-if="document.auditStatus == 2">mdi-cancel</v-icon>
+            <v-icon class="ml-2" v-if="document.auditStatus == 3">mdi-account-clock</v-icon>
+            <v-icon class="ml-2" v-if="document.auditStatus == 4">mdi-file</v-icon>
+          </v-chip>
           <!-- <v-btn color="secondary" v-if="document.status == 3">REMIND AGAIN</v-btn> -->
           <v-spacer></v-spacer>
           <v-icon v-if="document.status == 1">mdi-eye-outline</v-icon>
@@ -62,6 +72,12 @@ export default {
   mounted() {
     axios.get('/api/v1/documents').then((response) => {
       this.documents = response.data['documents'];
+      for (let i = 0; i < this.documents.length; i++) {
+        let document = this.documents[i];
+        this.documents[i].auditStatusColor = document.auditStatus == 1 ? 'success' : document.auditStatus == 2 ? 'error' : document.auditStatus == 3 ? 'warning' : 'grey';
+        this.documents[i].auditStatusText = document.auditStatus == 1 ? 'Approved' : document.auditStatus == 2 ? 'Rejected' : document.auditStatus == 3 ? 'Pending' : 'Not Sent';
+      }
+      console.log(this.documents);
       // for (let i = 0; i < this.documents.length; i++) {
       //   this.documents[i].reveal = false;
       // }

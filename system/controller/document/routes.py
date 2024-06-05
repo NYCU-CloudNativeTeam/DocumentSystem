@@ -127,9 +127,7 @@ def get_document(uid):
     user = user_service.get_user_by_google_id(session['google_id'])
     document = document_service.get_document(user.id, uid)
     if 'state' in document:
-        if document['state'] == 'session is locked by other user.':
-            return jsonify({"error": "session is locked by other user"}), 400
-        return jsonify({"error": "Can't find document by uid"}), 404
+        return jsonify({"error": "Can't find document by uid"}), 400
     else:
         return jsonify(document), 200
 

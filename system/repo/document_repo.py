@@ -179,6 +179,9 @@ class DocumentRepository:
     def get_document_mode(self, user: User, document: Document):
         if document.owner_id == user.id:
             return 2
+        audit = Audit.query.filter_by(document_id=document.id).first()
+        if audit and audit.auditor_id == user.id:
+            return 3
         document_permission = DocumentPermission.query.\
             filter_by(user_id=user.id, document_id=document.id)\
             .first()
