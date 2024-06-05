@@ -111,18 +111,18 @@ class DocumentService:
             mode = self.document_repo.get_document_mode(user, document)
             document_comments = self.document_repo.get_document_comment_by_document_id(document.id)
             current_app.logger.info(f"Get {len(document_comments)} comments of document (uid: {document_uid})")
+            otherIsEditting = False
             if document.lock_session is not "" and document.lock_session is not None:
                 if document.lock_session != session.get("lock_session"):
                     lock_session = datetime.strptime(document.lock_session, "%Y-%m-%d %H:%M:%S")
                     if lock_session + timedelta(minutes=5) > datetime.now() :
                         current_app.logger.info(f"Document Ud: {document_uid} is locked by other user.")
-                        return {
-                            "state": "session is locked by other user."
-                        }
+                        otherIsEditting = True
             document.lock_session = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             session["lock_session"] = document.lock_session
             self.document_repo.update_document(document)
             return {
+                'otherIsEditting': otherIsEditting,
                 "uid": document.uid,
                 "name": document.name,
                 "body": document.body,
