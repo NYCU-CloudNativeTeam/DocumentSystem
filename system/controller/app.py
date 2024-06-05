@@ -22,7 +22,7 @@ from model.document_model import (
     DocumentStatus
 )
 from model.audit_model import Audit, AuditStatus
-from model.user_model import User
+from model.document_model import Document
 from repo.audit_repo import AuditRepository
 from repo.user_repo import UserRepository
 from repo.document_repo import DocumentRepository
@@ -182,7 +182,7 @@ def create_app():
 
     # import admin and register
     admin = Admin(app, url="/admin", name='microblog', template_mode='bootstrap3')
-    admin.add_view(ModelView(User, db.session))
+    admin.add_view(ModelView(Document, db.session))
 
     return app
 
