@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from flask import current_app
 from model.NotificationModel import Notification
 
 class NotificationStrategy(ABC):
@@ -50,6 +51,6 @@ class EmailRepo(NotificationStrategy):
 
             # Close the connection
             server.quit()
-            print("Email sent successfully.")
+            current_app.logger.info("Email sent successfully.")
         except Exception as e:
-            print(f"Failed to send email. Error: {e}")
+            current_app.logger.info(f"Failed to send email. Error: {e}")
